@@ -1,0 +1,36 @@
+{
+  "agent": {
+    "id": "performance-monitoring-agent",
+    "name": "Performance Monitoring Agent",
+    "description": "Collects Prometheus metrics and detects anomalies"
+  },
+  "prometheus": {
+    "url": "http://localhost:9090",
+    "query_interval_seconds": 30,
+    "timeout_seconds": 10
+  },
+  "anomaly_detection": {
+    "enabled": true,
+    "thresholds": {
+      "cpu": 80,
+      "memory": 85,
+      "latency_ms": 1000
+    },
+    "severity_levels": {
+      "low": 1,
+      "medium": 2,
+      "high": 3,
+      "critical": 4
+    }
+  },
+  "message_bus": {
+    "subscribe_topics": [
+      "metrics.collected"
+    ],
+    "publish_topics": [
+      "anomaly.detected",
+      "threshold.exceeded"
+    ]
+  }
+}
+

@@ -1,0 +1,131 @@
+{
+  "name": "Security Intrusion Response",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "webhook-trigger",
+      "name": "Webhook - SecurityAlert",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [250, 300],
+      "webhookId": "security-alert-trigger"
+    },
+    {
+      "parameters": {
+        "model": "openai/gpt-4",
+        "prompt": "=Analyze this security alert:\n\n{{ $json.alert_type }}\n\nDetails:\n{{ $json.details }}\n\nSource IP: {{ $json.source_ip }}\n\nProvide:\n1. Threat assessment\n2. Severity level\n3. Recommended security actions\n4. Reasoning for actions"
+      },
+      "id": "llm-analyze",
+      "name": "LLM Security Reasoning",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 1,
+      "position": [450, 300],
+      "url": "https://openrouter.ai/api/v1/chat/completions"
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.llm_response.firewall_api }}",
+        "method": "POST",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "action",
+              "value": "block"
+            },
+            {
+              "name": "ip",
+              "value": "={{ $json.source_ip }}"
+            },
+            {
+              "name": "reason",
+              "value": "={{ $json.llm_response.reason }}"
+            }
+          ]
+        }
+      },
+      "id": "firewall-api",
+      "name": "Trigger Firewall API",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 1,
+      "position": [650, 300]
+    },
+    {
+      "parameters": {
+        "url": "http://localhost:8080/agents/n8n/webhook",
+        "method": "POST",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "action",
+              "value": "security_response_completed"
+            },
+            {
+              "name": "status",
+              "value": "={{ $json.firewall_response.status }}"
+            },
+            {
+              "name": "actions_taken",
+              "value": "={{ $json.llm_response.recommended_actions }}"
+            },
+            {
+              "name": "explanation",
+              "value": "={{ $json.llm_response.reasoning }}"
+            }
+          ]
+        }
+      },
+      "id": "callback",
+      "name": "Return Status",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 1,
+      "position": [850, 300]
+    }
+  ],
+  "connections": {
+    "Webhook - SecurityAlert": {
+      "main": [
+        [
+          {
+            "node": "LLM Security Reasoning",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "LLM Security Reasoning": {
+      "main": [
+        [
+          {
+            "node": "Trigger Firewall API",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Trigger Firewall API": {
+      "main": [
+        [
+          {
+            "node": "Return Status",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "tags": [],
+  "triggerCount": 1,
+  "updatedAt": "2024-01-01T00:00:00.000Z",
+  "versionId": "1"
+}
+

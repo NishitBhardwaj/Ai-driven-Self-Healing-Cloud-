@@ -1,0 +1,115 @@
+{
+  "name": "Code Debugging Pipeline",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "webhook-trigger",
+      "name": "Webhook - CodeFix",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [250, 300],
+      "webhookId": "code-fix-trigger"
+    },
+    {
+      "parameters": {
+        "model": "openai/gpt-4",
+        "prompt": "=Fix this code error:\n\nError: {{ $json.error_log }}\n\nFile: {{ $json.file_path }}\n\nCode:\n```\n{{ $json.file_content }}\n```\n\nStacktrace:\n{{ $json.stacktrace }}\n\nProvide:\n1. Fixed code\n2. Explanation of the fix\n3. Code diff/patch"
+      },
+      "id": "llm-fix",
+      "name": "LLM Fix Code",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 1,
+      "position": [450, 300],
+      "url": "https://openrouter.ai/api/v1/chat/completions"
+    },
+    {
+      "parameters": {
+        "operation": "write",
+        "filePath": "=/patches/{{ $json.file_path }}.patch",
+        "fileContent": "={{ $json.llm_response.patch }}"
+      },
+      "id": "save-patch",
+      "name": "Save Patch",
+      "type": "n8n-nodes-base.writeFile",
+      "typeVersion": 1,
+      "position": [650, 300]
+    },
+    {
+      "parameters": {
+        "url": "http://localhost:8080/agents/n8n/webhook",
+        "method": "POST",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "action",
+              "value": "code_fix_completed"
+            },
+            {
+              "name": "fixed_code",
+              "value": "={{ $json.llm_response.fixed_code }}"
+            },
+            {
+              "name": "patch",
+              "value": "={{ $json.llm_response.patch }}"
+            },
+            {
+              "name": "explanation",
+              "value": "={{ $json.llm_response.explanation }}"
+            }
+          ]
+        }
+      },
+      "id": "callback",
+      "name": "Return Code Diff",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 1,
+      "position": [850, 300]
+    }
+  ],
+  "connections": {
+    "Webhook - CodeFix": {
+      "main": [
+        [
+          {
+            "node": "LLM Fix Code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "LLM Fix Code": {
+      "main": [
+        [
+          {
+            "node": "Save Patch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Save Patch": {
+      "main": [
+        [
+          {
+            "node": "Return Code Diff",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "tags": [],
+  "triggerCount": 1,
+  "updatedAt": "2024-01-01T00:00:00.000Z",
+  "versionId": "1"
+}
+

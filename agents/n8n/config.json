@@ -1,0 +1,34 @@
+{
+  "agent": {
+    "id": "n8n-workflow-agent",
+    "name": "n8n Workflow Agent",
+    "description": "Sends triggers to n8n via webhook and receives callback actions"
+  },
+  "n8n": {
+    "webhook_url": "http://localhost:5678/webhook",
+    "callback_url": "http://localhost:8080/n8n/callback",
+    "timeout_seconds": 30,
+    "retry_attempts": 3
+  },
+  "workflows": {
+    "error_detection": {
+      "workflow_id": "error-handling-workflow",
+      "enabled": true
+    },
+    "scaling": {
+      "workflow_id": "scaling-workflow",
+      "enabled": true
+    }
+  },
+  "message_bus": {
+    "subscribe_topics": [
+      "n8n.trigger",
+      "n8n.callback"
+    ],
+    "publish_topics": [
+      "n8n.trigger",
+      "n8n.workflow.completed"
+    ]
+  }
+}
+

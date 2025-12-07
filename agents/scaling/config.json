@@ -1,0 +1,32 @@
+{
+  "agent": {
+    "id": "scaling-agent",
+    "name": "Scaling Agent",
+    "description": "Predicts traffic load and scales pods or cloud instances"
+  },
+  "scaling": {
+    "min_replicas": 1,
+    "max_replicas": 10,
+    "scale_up_threshold": 80,
+    "scale_down_threshold": 30,
+    "cooldown_seconds": 300,
+    "evaluation_interval_seconds": 60
+  },
+  "prediction": {
+    "enabled": true,
+    "lookback_minutes": 30,
+    "forecast_minutes": 15
+  },
+  "message_bus": {
+    "subscribe_topics": [
+      "scale.required",
+      "threshold.exceeded"
+    ],
+    "publish_topics": [
+      "scale.up",
+      "scale.down",
+      "scale.completed"
+    ]
+  }
+}
+

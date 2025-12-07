@@ -65,13 +65,18 @@ logs/
 *.kubeconfig
 kubeconfig
 
-# Secrets and credentials
+# Secrets and credentials - NEVER COMMIT THESE
 secrets/
 *.pem
 *.key
 *.crt
 credentials.json
 config/secrets/
+**/secrets/
+**/api_keys.txt
+**/*_keys.txt
+**/*secret*
+**/*secret*/
 
 # Test coverage
 .coverage
@@ -146,3 +151,29 @@ dmypy.json
 # MinIO
 minio_data/
 
+# ============================================
+# Planning and phase-specific documentation
+# These files should NOT be uploaded to GitHub
+# ============================================
+
+# Exclude entire plan directory and all its contents
+plan/
+**/plan/
+
+# Exclude phase-specific documentation files
+PHASE1_README.md
+PHASE2_README.md
+PHASE3_README.md
+PHASE*.md
+*PHASE*README.md
+*PHASE*VALIDATION*.md
+PHASE*_VALIDATION_CHECKLIST.md
+QUICKSTART.md
+*QUICKSTART*.md
+
+# ============================================
+# IMPORTANT: Keep main README.md and folder-specific README.md files
+# These ARE allowed and should be committed to GitHub
+# ============================================
+!README.md
+!**/README.md

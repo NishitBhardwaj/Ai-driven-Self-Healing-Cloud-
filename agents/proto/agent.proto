@@ -1,0 +1,136 @@
+syntax = "proto3";
+
+package agent;
+
+option go_package = "github.com/ai-driven-self-healing-cloud/agents/proto";
+
+// AgentService provides gRPC communication between agents
+service AgentService {
+  // SendMessage sends a message to an agent
+  rpc SendMessage(AgentMessage) returns (AgentResponse);
+  
+  // SendEvent sends an event to an agent
+  rpc SendEvent(EventMessage) returns (AgentResponse);
+  
+  // InvokeAction invokes a specific action on an agent
+  rpc InvokeAction(ActionRequest) returns (ActionResponse);
+  
+  // Heal triggers healing action
+  rpc Heal(HealRequest) returns (HealResponse);
+  
+  // FixCode triggers code fixing
+  rpc FixCode(CodeFixRequest) returns (CodeFixResponse);
+  
+  // Scale triggers scaling action
+  rpc Scale(ScaleRequest) returns (ScaleResponse);
+  
+  // TriggerN8N triggers n8n workflow
+  rpc TriggerN8N(N8NTriggerRequest) returns (N8NTriggerResponse);
+}
+
+// AgentMessage represents a generic message between agents
+message AgentMessage {
+  string from_agent = 1;
+  string to_agent = 2;
+  string message_type = 3;
+  string payload = 4; // JSON string
+  int64 timestamp = 5;
+}
+
+// EventMessage represents an event message
+message EventMessage {
+  string event_type = 1;
+  string source = 2;
+  string payload = 3; // JSON string
+  int64 timestamp = 4;
+}
+
+// AgentResponse is a generic response from an agent
+message AgentResponse {
+  bool success = 1;
+  string message = 2;
+  string data = 3; // JSON string
+  string explanation = 4; // XAI explanation
+}
+
+// ActionRequest requests an action from an agent
+message ActionRequest {
+  string agent_name = 1;
+  string action = 2;
+  string parameters = 3; // JSON string
+}
+
+// ActionResponse is the response from an action
+message ActionResponse {
+  bool success = 1;
+  string result = 2; // JSON string
+  string explanation = 3; // XAI explanation
+}
+
+// HealRequest requests healing action
+message HealRequest {
+  string service_id = 1;
+  string failure_type = 2;
+  string error_message = 3;
+  string metadata = 4; // JSON string
+}
+
+// HealResponse is the response from healing action
+message HealResponse {
+  bool success = 1;
+  string service_id = 2;
+  string action_taken = 3;
+  string reasoning = 4;
+  string explanation = 5; // XAI explanation
+}
+
+// CodeFixRequest requests code fixing
+message CodeFixRequest {
+  string error_log = 1;
+  string file_path = 2;
+  string file_content = 3;
+  string stacktrace = 4;
+}
+
+// CodeFixResponse is the response from code fixing
+message CodeFixResponse {
+  bool success = 1;
+  string fixed_code = 2;
+  string patch = 3;
+  string explanation = 4; // XAI explanation
+  string reasoning = 5;
+}
+
+// ScaleRequest requests scaling action
+message ScaleRequest {
+  string service_id = 1;
+  string action = 2; // "up" or "down"
+  int32 target_replicas = 3;
+  string reason = 4;
+}
+
+// ScaleResponse is the response from scaling action
+message ScaleResponse {
+  bool success = 1;
+  string service_id = 2;
+  int32 previous_replicas = 3;
+  int32 new_replicas = 4;
+  string explanation = 5; // XAI explanation
+}
+
+// N8NTriggerRequest requests n8n workflow trigger
+message N8NTriggerRequest {
+  string workflow_id = 1;
+  string event_type = 2;
+  string data = 3; // JSON string
+  string source = 4;
+}
+
+// N8NTriggerResponse is the response from n8n trigger
+message N8NTriggerResponse {
+  bool success = 1;
+  string workflow_id = 2;
+  string response_data = 3; // JSON string
+  string explanation = 4; // XAI explanation
+}
+

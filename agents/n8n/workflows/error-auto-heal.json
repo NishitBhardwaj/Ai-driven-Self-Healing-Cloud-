@@ -1,0 +1,196 @@
+{
+  "name": "Error Auto-Heal",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "webhook-trigger",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [250, 300],
+      "webhookId": "error-heal-trigger"
+    },
+    {
+      "parameters": {
+        "model": "openai/gpt-3.5-turbo",
+        "prompt": "=Analyze this error and explain what went wrong:\n\n{{ $json.error_message }}\n\nStacktrace:\n{{ $json.stacktrace }}\n\nProvide:\n1. Root cause\n2. Severity assessment\n3. Recommended action (heal/escalate)"
+      },
+      "id": "llm-analyze",
+      "name": "LLM Analyze Error",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 1,
+      "position": [450, 300],
+      "url": "https://openrouter.ai/api/v1/chat/completions",
+      "authentication": "genericCredentialType",
+      "genericAuthType": "httpHeaderAuth"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{ $json.llm_response.recommendation }}",
+              "operation": "contains",
+              "value2": "heal"
+            }
+          ]
+        }
+      },
+      "id": "decision-node",
+      "name": "Decision: Heal or Escalate",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [650, 300]
+    },
+    {
+      "parameters": {
+        "url": "http://localhost:8080/agents/self-healing/heal",
+        "method": "POST",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "service_id",
+              "value": "={{ $json.service_id }}"
+            },
+            {
+              "name": "failure_type",
+              "value": "={{ $json.failure_type }}"
+            },
+            {
+              "name": "error",
+              "value": "={{ $json.error_message }}"
+            }
+          ]
+        }
+      },
+      "id": "heal-action",
+      "name": "Trigger Heal",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 1,
+      "position": [850, 200]
+    },
+    {
+      "parameters": {
+        "url": "http://localhost:8080/agents/n8n/webhook",
+        "method": "POST",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "action",
+              "value": "escalate"
+            },
+            {
+              "name": "reason",
+              "value": "={{ $json.llm_response.reason }}"
+            }
+          ]
+        }
+      },
+      "id": "escalate-action",
+      "name": "Escalate",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 1,
+      "position": [850, 400]
+    },
+    {
+      "parameters": {
+        "url": "http://localhost:8080/agents/n8n/webhook",
+        "method": "POST",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "action",
+              "value": "heal_completed"
+            },
+            {
+              "name": "result",
+              "value": "={{ $json }}"
+            }
+          ]
+        }
+      },
+      "id": "callback",
+      "name": "Callback to Agent",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 1,
+      "position": [1050, 300]
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "LLM Analyze Error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "LLM Analyze Error": {
+      "main": [
+        [
+          {
+            "node": "Decision: Heal or Escalate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Decision: Heal or Escalate": {
+      "main": [
+        [
+          {
+            "node": "Trigger Heal",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Escalate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Trigger Heal": {
+      "main": [
+        [
+          {
+            "node": "Callback to Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Escalate": {
+      "main": [
+        [
+          {
+            "node": "Callback to Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "tags": [],
+  "triggerCount": 1,
+  "updatedAt": "2024-01-01T00:00:00.000Z",
+  "versionId": "1"
+}
+

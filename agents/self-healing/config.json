@@ -1,0 +1,42 @@
+{
+  "agent": {
+    "id": "self-healing-agent",
+    "name": "Self-Healing Agent",
+    "description": "Detects failures and automatically recovers services"
+  },
+  "healing": {
+    "strategies": {
+      "restart": {
+        "enabled": true,
+        "max_attempts": 3,
+        "delay_seconds": 5
+      },
+      "rollback": {
+        "enabled": true,
+        "max_attempts": 2,
+        "delay_seconds": 10
+      },
+      "replace": {
+        "enabled": true,
+        "max_attempts": 1,
+        "delay_seconds": 0
+      }
+    },
+    "failure_detection": {
+      "check_interval_seconds": 30,
+      "failure_threshold": 3
+    }
+  },
+  "message_bus": {
+    "subscribe_topics": [
+      "healing.required",
+      "error.detected"
+    ],
+    "publish_topics": [
+      "healing.started",
+      "healing.completed",
+      "healing.failed"
+    ]
+  }
+}
+
