@@ -1,0 +1,8 @@
+# Lambda function dependencies
+# Note: Most AWS SDK functionality is provided by the Lambda runtime
+# Only include additional dependencies if needed
+
+# For testing and development
+# boto3>=1.26.0
+# requests>=2.28.0
+

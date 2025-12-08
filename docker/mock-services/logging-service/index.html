@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Mock Logging Service</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+        }
+        .status {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+        }
+        .healthy {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        .endpoint {
+            background-color: #f8f9fa;
+            padding: 10px;
+            margin: 10px 0;
+            border-left: 4px solid #007bff;
+        }
+    </style>
+</head>
+<body>
+    <h1>Mock Logging Service</h1>
+    <div class="status healthy">
+        <strong>Status:</strong> Running
+    </div>
+    <h2>Endpoints</h2>
+    <div class="endpoint">
+        <strong>GET /health</strong> - Health check endpoint
+    </div>
+    <div class="endpoint">
+        <strong>GET /logs</strong> - Retrieve logs
+    </div>
+    <div class="endpoint">
+        <strong>POST /logs</strong> - Submit logs
+    </div>
+    <div class="endpoint">
+        <strong>GET /metrics</strong> - Prometheus metrics
+    </div>
+</body>
+</html>
+

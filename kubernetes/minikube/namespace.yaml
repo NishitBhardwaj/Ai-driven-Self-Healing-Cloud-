@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: self-healing-cloud
+  labels:
+    name: self-healing-cloud
+    purpose: self-healing-agent-testing
+    environment: development
+  annotations:
+    description: "Namespace for Self-Healing Cloud system testing and development"
+

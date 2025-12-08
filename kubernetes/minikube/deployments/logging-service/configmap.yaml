@@ -1,0 +1,32 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: logging-service-config
+  namespace: self-healing-cloud
+  labels:
+    app: logging-service
+data:
+  log_level: "INFO"
+  log_retention_days: "30"
+  max_log_size: "100Mi"
+  log_format: "json"
+  log_rotation: "daily"
+  aggregation_enabled: "true"
+  service_config.json: |
+    {
+      "name": "logging-service",
+      "version": "v1",
+      "features": {
+        "auto_scaling": true,
+        "health_checks": true,
+        "metrics": true,
+        "log_aggregation": true
+      },
+      "endpoints": {
+        "health": "/health",
+        "ready": "/ready",
+        "metrics": "/metrics",
+        "logs": "/api/v1/logs"
+      }
+    }
+

@@ -1,0 +1,33 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: storage-service-config
+  namespace: self-healing-cloud
+  labels:
+    app: storage-service
+data:
+  log_level: "INFO"
+  storage_backend: "local"
+  max_storage_size: "10Gi"
+  storage_path: "/data"
+  cache_enabled: "true"
+  cache_size_mb: "512"
+  replication_factor: "2"
+  service_config.json: |
+    {
+      "name": "storage-service",
+      "version": "v1",
+      "features": {
+        "auto_scaling": true,
+        "health_checks": true,
+        "metrics": true,
+        "replication": true
+      },
+      "endpoints": {
+        "health": "/health",
+        "ready": "/ready",
+        "metrics": "/metrics",
+        "storage": "/api/v1/storage"
+      }
+    }
+

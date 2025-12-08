@@ -1,6 +1,12 @@
 package scaling
 
 import (
+	"bytes"
+	"encoding/json"
+	"fmt"
+	"os"
+	"os/exec"
+	"path/filepath"
 	"time"
 
 	"github.com/sirupsen/logrus"
@@ -77,21 +83,83 @@ func (as *AutoScaler) ScaleDown(serviceID string, targetReplicas int) (*ScalingR
 	return result, nil
 }
 
-// EvaluateScaling evaluates if scaling is needed based on metrics
+// EvaluateScaling evaluates if scaling is needed based on metrics using Transformer predictions
 func (as *AutoScaler) EvaluateScaling(serviceID string, metrics map[string]float64) (*ScalingRequest, error) {
-	as.logger.WithField("service_id", serviceID).Debug("Evaluating scaling needs")
+	as.logger.WithField("service_id", serviceID).Debug("Evaluating scaling needs using AI Engine")
 
-	// TODO: Implement intelligent scaling evaluation in Phase 5
-	// This will use LLM to analyze metrics and predict load
+	// Try to use AI Engine integration (Transformer forecasting)
+	aiRecommendation, err := as.callAIIntegration(serviceID, metrics)
+	if err != nil {
+		as.logger.WithError(err).Warn("AI Engine integration failed, using fallback evaluation")
+		return as.fallbackScalingEvaluation(serviceID, metrics), nil
+	}
 
-	request := &ScalingRequest{
+	if aiRecommendation != nil {
+		request := &ScalingRequest{
+			ServiceID:      serviceID,
+			CurrentReplicas: aiRecommendation["current_replicas"].(int),
+			TargetReplicas:  aiRecommendation["target_replicas"].(int),
+			Reason:         aiRecommendation["reasoning"].(string),
+			Metadata:       metrics,
+		}
+		return request, nil
+	}
+
+	return as.fallbackScalingEvaluation(serviceID, metrics), nil
+}
+
+// callAIIntegration calls Python AI integration wrapper
+func (as *AutoScaler) callAIIntegration(serviceID string, metrics map[string]float64) (map[string]interface{}, error) {
+	// Get script path
+	scriptPath := filepath.Join(filepath.Dir(os.Args[0]), "agents", "scaling", "ai_integration_wrapper.py")
+	if _, err := os.Stat(scriptPath); os.IsNotExist(err) {
+		scriptPath = "agents/scaling/ai_integration_wrapper.py"
+	}
+
+	// Prepare input - convert metrics to arrays
+	historicalMetrics := make(map[string][]float64)
+	for key, value := range metrics {
+		historicalMetrics[key] = []float64{value}
+	}
+
+	input := map[string]interface{}{
+		"historical_metrics": historicalMetrics,
+		"current_replicas":   2,
+		"cpu_threshold":     80.0,
+		"memory_threshold":  80.0,
+		"latency_threshold": 500.0,
+	}
+
+	inputJSON, err := json.Marshal(input)
+	if err != nil {
+		return nil, err
+	}
+
+	// Call Python script
+	cmd := exec.Command("python3", scriptPath, "get_scaling_recommendation")
+	cmd.Stdin = bytes.NewReader(inputJSON)
+	output, err := cmd.Output()
+	if err != nil {
+		return nil, err
+	}
+
+	// Parse output
+	var result map[string]interface{}
+	if err := json.Unmarshal(output, &result); err != nil {
+		return nil, err
+	}
+
+	return result, nil
+}
+
+// fallbackScalingEvaluation provides fallback when AI is unavailable
+func (as *AutoScaler) fallbackScalingEvaluation(serviceID string, metrics map[string]float64) *ScalingRequest {
+	return &ScalingRequest{
 		ServiceID:      serviceID,
 		CurrentReplicas: 2,
 		TargetReplicas:  4,
 		Reason:         "High CPU utilization detected",
 		Metadata:       metrics,
 	}
-
-	return request, nil
 }
 
