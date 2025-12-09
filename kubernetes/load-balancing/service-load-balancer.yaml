@@ -1,0 +1,68 @@
+---
+# LoadBalancer Service for Self-Healing Agent
+apiVersion: v1
+kind: Service
+metadata:
+  name: ai-cloud-self-healing-lb
+  namespace: ai-cloud-production
+  annotations:
+    service.beta.kubernetes.io/aws-load-balancer-type: "nlb"
+    service.beta.kubernetes.io/aws-load-balancer-scheme: "internet-facing"
+    service.beta.kubernetes.io/aws-load-balancer-cross-zone-load-balancing-enabled: "true"
+    service.beta.kubernetes.io/aws-load-balancer-connection-idle-timeout: "60"
+spec:
+  type: LoadBalancer
+  ports:
+  - port: 80
+    targetPort: 8080
+    protocol: TCP
+    name: http
+  - port: 443
+    targetPort: 8080
+    protocol: TCP
+    name: https
+  selector:
+    app: ai-cloud
+    component: self-healing
+  sessionAffinity: ClientIP
+  sessionAffinityConfig:
+    clientIP:
+      timeoutSeconds: 10800
+---
+# LoadBalancer Service for Scaling Agent
+apiVersion: v1
+kind: Service
+metadata:
+  name: ai-cloud-scaling-lb
+  namespace: ai-cloud-production
+  annotations:
+    service.beta.kubernetes.io/aws-load-balancer-type: "nlb"
+    service.beta.kubernetes.io/aws-load-balancer-scheme: "internet-facing"
+spec:
+  type: LoadBalancer
+  ports:
+  - port: 80
+    targetPort: 8080
+    protocol: TCP
+  selector:
+    app: ai-cloud
+    component: scaling
+---
+# LoadBalancer Service for Task-Solving Agent
+apiVersion: v1
+kind: Service
+metadata:
+  name: ai-cloud-task-solving-lb
+  namespace: ai-cloud-production
+  annotations:
+    service.beta.kubernetes.io/aws-load-balancer-type: "nlb"
+spec:
+  type: LoadBalancer
+  ports:
+  - port: 80
+    targetPort: 8080
+    protocol: TCP
+  selector:
+    app: ai-cloud
+    component: task-solving
+

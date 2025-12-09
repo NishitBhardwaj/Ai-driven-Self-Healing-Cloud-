@@ -1,0 +1,105 @@
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: ai-cloud-self-healing-pdb
+  namespace: ai-cloud-production
+  labels:
+    app: ai-cloud
+    component: self-healing
+spec:
+  minAvailable: 2  # Ensure at least 2 pods are always available
+  selector:
+    matchLabels:
+      app: ai-cloud
+      component: self-healing
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: ai-cloud-scaling-pdb
+  namespace: ai-cloud-production
+  labels:
+    app: ai-cloud
+    component: scaling
+spec:
+  minAvailable: 2
+  selector:
+    matchLabels:
+      app: ai-cloud
+      component: scaling
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: ai-cloud-task-solving-pdb
+  namespace: ai-cloud-production
+  labels:
+    app: ai-cloud
+    component: task-solving
+spec:
+  minAvailable: 3  # Higher availability for critical service
+  selector:
+    matchLabels:
+      app: ai-cloud
+      component: task-solving
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: ai-cloud-performance-monitoring-pdb
+  namespace: ai-cloud-production
+  labels:
+    app: ai-cloud
+    component: performance-monitoring
+spec:
+  minAvailable: 2
+  selector:
+    matchLabels:
+      app: ai-cloud
+      component: performance-monitoring
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: ai-cloud-coding-pdb
+  namespace: ai-cloud-production
+  labels:
+    app: ai-cloud
+    component: coding
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app: ai-cloud
+      component: coding
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: ai-cloud-security-pdb
+  namespace: ai-cloud-production
+  labels:
+    app: ai-cloud
+    component: security
+spec:
+  minAvailable: 2
+  selector:
+    matchLabels:
+      app: ai-cloud
+      component: security
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: ai-cloud-optimization-pdb
+  namespace: ai-cloud-production
+  labels:
+    app: ai-cloud
+    component: optimization
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app: ai-cloud
+      component: optimization
+

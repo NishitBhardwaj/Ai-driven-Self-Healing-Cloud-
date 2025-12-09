@@ -1,0 +1,182 @@
+{{- if and .Values.selfHealing.enabled .Values.selfHealing.autoscaling.enabled }}
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: ai-cloud-self-healing
+  labels:
+    app: ai-cloud
+    component: self-healing
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: ai-cloud-self-healing
+  minReplicas: {{ .Values.selfHealing.autoscaling.minReplicas }}
+  maxReplicas: {{ .Values.selfHealing.autoscaling.maxReplicas }}
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: {{ .Values.selfHealing.autoscaling.targetCPUUtilizationPercentage }}
+  {{- if .Values.selfHealing.autoscaling.targetMemoryUtilizationPercentage }}
+  - type: Resource
+    resource:
+      name: memory
+      target:
+        type: Utilization
+        averageUtilization: {{ .Values.selfHealing.autoscaling.targetMemoryUtilizationPercentage }}
+  {{- end }}
+  behavior:
+    scaleDown:
+      stabilizationWindowSeconds: 300
+      policies:
+      - type: Percent
+        value: 50
+        periodSeconds: 60
+    scaleUp:
+      stabilizationWindowSeconds: 0
+      policies:
+      - type: Percent
+        value: 100
+        periodSeconds: 60
+      - type: Pods
+        value: 2
+        periodSeconds: 60
+      selectPolicy: Max
+{{- end }}
+
+{{- if and .Values.scaling.enabled .Values.scaling.autoscaling.enabled }}
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: ai-cloud-scaling
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: ai-cloud-scaling
+  minReplicas: {{ .Values.scaling.autoscaling.minReplicas }}
+  maxReplicas: {{ .Values.scaling.autoscaling.maxReplicas }}
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: {{ .Values.scaling.autoscaling.targetCPUUtilizationPercentage }}
+{{- end }}
+
+{{- if and .Values.taskSolving.enabled .Values.taskSolving.autoscaling.enabled }}
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: ai-cloud-task-solving
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: ai-cloud-task-solving
+  minReplicas: {{ .Values.taskSolving.autoscaling.minReplicas }}
+  maxReplicas: {{ .Values.taskSolving.autoscaling.maxReplicas }}
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: {{ .Values.taskSolving.autoscaling.targetCPUUtilizationPercentage }}
+{{- end }}
+
+{{- if and .Values.performanceMonitoring.enabled .Values.performanceMonitoring.autoscaling.enabled }}
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: ai-cloud-performance-monitoring
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: ai-cloud-performance-monitoring
+  minReplicas: {{ .Values.performanceMonitoring.autoscaling.minReplicas }}
+  maxReplicas: {{ .Values.performanceMonitoring.autoscaling.maxReplicas }}
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: {{ .Values.performanceMonitoring.autoscaling.targetCPUUtilizationPercentage }}
+{{- end }}
+
+{{- if and .Values.coding.enabled .Values.coding.autoscaling.enabled }}
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: ai-cloud-coding
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: ai-cloud-coding
+  minReplicas: {{ .Values.coding.autoscaling.minReplicas }}
+  maxReplicas: {{ .Values.coding.autoscaling.maxReplicas }}
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: {{ .Values.coding.autoscaling.targetCPUUtilizationPercentage }}
+{{- end }}
+
+{{- if and .Values.security.enabled .Values.security.autoscaling.enabled }}
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: ai-cloud-security
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: ai-cloud-security
+  minReplicas: {{ .Values.security.autoscaling.minReplicas }}
+  maxReplicas: {{ .Values.security.autoscaling.maxReplicas }}
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: {{ .Values.security.autoscaling.targetCPUUtilizationPercentage }}
+{{- end }}
+
+{{- if and .Values.optimization.enabled .Values.optimization.autoscaling.enabled }}
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: ai-cloud-optimization
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: ai-cloud-optimization
+  minReplicas: {{ .Values.optimization.autoscaling.minReplicas }}
+  maxReplicas: {{ .Values.optimization.autoscaling.maxReplicas }}
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: {{ .Values.optimization.autoscaling.targetCPUUtilizationPercentage }}
+{{- end }}
+

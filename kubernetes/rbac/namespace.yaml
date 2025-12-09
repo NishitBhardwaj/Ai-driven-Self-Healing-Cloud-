@@ -1,0 +1,24 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: ai-cloud-production
+  labels:
+    name: ai-cloud-production
+    environment: production
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: ai-cloud-staging
+  labels:
+    name: ai-cloud-staging
+    environment: staging
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: ai-cloud-development
+  labels:
+    name: ai-cloud-development
+    environment: development
+

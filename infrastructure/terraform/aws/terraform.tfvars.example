@@ -1,0 +1,40 @@
+# AWS Configuration
+aws_region = "us-east-1"
+environment = "production"
+project_name = "ai-self-healing-cloud"
+
+# Network Configuration
+vpc_cidr = "10.0.0.0/16"
+public_subnet_cidrs = ["10.0.1.0/24", "10.0.2.0/24"]
+private_subnet_cidrs = ["10.0.11.0/24", "10.0.12.0/24"]
+allowed_ssh_cidr = "0.0.0.0/0"  # Restrict this in production
+
+# EC2 Configuration
+key_pair_name = "my-key-pair"
+agent_instance_type = "t3.medium"
+
+# Auto Scaling Configuration
+min_agent_instances = 2
+max_agent_instances = 10
+desired_agent_instances = 3
+
+# Load Balancer Configuration
+enable_deletion_protection = true
+enable_https = true
+certificate_arn = "arn:aws:acm:us-east-1:123456789012:certificate/xxxxx"  # Your SSL certificate ARN
+
+# Database Configuration
+db_engine = "postgres"
+db_engine_version = "15.4"
+db_instance_class = "db.t3.micro"
+db_allocated_storage = 20
+db_max_allocated_storage = 100
+db_name = "ai_cloud_db"
+db_username = "admin"
+db_password = "CHANGE_ME_SECURE_PASSWORD"  # Use a secure password
+db_backup_retention_period = 7
+enable_read_replica = false
+
+# S3 Configuration
+log_retention_days = 90
+

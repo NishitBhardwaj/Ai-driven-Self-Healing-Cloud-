@@ -1,0 +1,125 @@
+{
+  "dashboard": {
+    "title": "Performance Forecasting Dashboard",
+    "tags": ["performance", "forecasting", "agents"],
+    "timezone": "browser",
+    "schemaVersion": 27,
+    "version": 1,
+    "refresh": "30s",
+    "panels": [
+      {
+        "id": 1,
+        "title": "CPU Usage Forecast",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "ai_cloud_cpu_usage_percent{agent=\"self-healing\"}",
+            "legendFormat": "Current CPU"
+          }
+        ],
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 0},
+        "yaxes": [
+          {"format": "percent", "label": "CPU Usage"},
+          {"format": "short"}
+        ]
+      },
+      {
+        "id": 2,
+        "title": "Success Rate Forecast",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "ai_cloud_success_rate{agent=\"self-healing\"}",
+            "legendFormat": "Success Rate"
+          }
+        ],
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 0},
+        "yaxes": [
+          {"format": "percent", "label": "Success Rate"},
+          {"format": "short"}
+        ]
+      },
+      {
+        "id": 3,
+        "title": "Latency P95 Forecast",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "ai_cloud_latency_p95_seconds{agent=\"self-healing\"}",
+            "legendFormat": "Latency P95"
+          }
+        ],
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 8},
+        "yaxes": [
+          {"format": "s", "label": "Latency"},
+          {"format": "short"}
+        ]
+      },
+      {
+        "id": 4,
+        "title": "Task Success Rate by Agent",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "ai_cloud_task_success_rate",
+            "legendFormat": "{{agent}}"
+          }
+        ],
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 8},
+        "yaxes": [
+          {"format": "percent", "label": "Success Rate"},
+          {"format": "short"}
+        ]
+      },
+      {
+        "id": 5,
+        "title": "Failure Recovery Time",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "ai_cloud_failure_recovery_time_seconds",
+            "legendFormat": "{{agent}}"
+          }
+        ],
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 16},
+        "yaxes": [
+          {"format": "s", "label": "Recovery Time"},
+          {"format": "short"}
+        ]
+      },
+      {
+        "id": 6,
+        "title": "Resource Consumption",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "ai_cloud_cpu_usage_percent",
+            "legendFormat": "CPU - {{agent}}"
+          },
+          {
+            "expr": "ai_cloud_memory_usage_percent",
+            "legendFormat": "Memory - {{agent}}"
+          }
+        ],
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 16},
+        "yaxes": [
+          {"format": "percent", "label": "Usage"},
+          {"format": "short"}
+        ]
+      },
+      {
+        "id": 7,
+        "title": "Agent Performance Summary",
+        "type": "table",
+        "targets": [
+          {
+            "expr": "ai_cloud_success_rate",
+            "legendFormat": "{{agent}}"
+          }
+        ],
+        "gridPos": {"h": 8, "w": 24, "x": 0, "y": 24}
+      }
+    ]
+  }
+}
+

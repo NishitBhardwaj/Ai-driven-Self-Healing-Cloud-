@@ -1,0 +1,163 @@
+{{- if .Values.selfHealing.enabled }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ai-cloud-self-healing
+  labels:
+    app: ai-cloud
+    component: self-healing
+spec:
+  type: {{ .Values.selfHealing.service.type }}
+  ports:
+  - port: {{ .Values.selfHealing.service.port }}
+    targetPort: http
+    protocol: TCP
+    name: http
+  - port: {{ .Values.selfHealing.service.metricsPort }}
+    targetPort: metrics
+    protocol: TCP
+    name: metrics
+  selector:
+    app: ai-cloud
+    component: self-healing
+{{- end }}
+
+{{- if .Values.scaling.enabled }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ai-cloud-scaling
+  labels:
+    app: ai-cloud
+    component: scaling
+spec:
+  type: {{ .Values.scaling.service.type }}
+  ports:
+  - port: {{ .Values.scaling.service.port }}
+    targetPort: http
+    name: http
+  - port: {{ .Values.scaling.service.metricsPort }}
+    targetPort: metrics
+    name: metrics
+  selector:
+    app: ai-cloud
+    component: scaling
+{{- end }}
+
+{{- if .Values.taskSolving.enabled }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ai-cloud-task-solving
+  labels:
+    app: ai-cloud
+    component: task-solving
+spec:
+  type: {{ .Values.taskSolving.service.type }}
+  ports:
+  - port: {{ .Values.taskSolving.service.port }}
+    targetPort: http
+    name: http
+  - port: {{ .Values.taskSolving.service.metricsPort }}
+    targetPort: metrics
+    name: metrics
+  selector:
+    app: ai-cloud
+    component: task-solving
+{{- end }}
+
+{{- if .Values.performanceMonitoring.enabled }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ai-cloud-performance-monitoring
+  labels:
+    app: ai-cloud
+    component: performance-monitoring
+spec:
+  type: {{ .Values.performanceMonitoring.service.type }}
+  ports:
+  - port: {{ .Values.performanceMonitoring.service.port }}
+    targetPort: http
+    name: http
+  - port: {{ .Values.performanceMonitoring.service.metricsPort }}
+    targetPort: metrics
+    name: metrics
+  selector:
+    app: ai-cloud
+    component: performance-monitoring
+{{- end }}
+
+{{- if .Values.coding.enabled }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ai-cloud-coding
+  labels:
+    app: ai-cloud
+    component: coding
+spec:
+  type: {{ .Values.coding.service.type }}
+  ports:
+  - port: {{ .Values.coding.service.port }}
+    targetPort: http
+    name: http
+  - port: {{ .Values.coding.service.metricsPort }}
+    targetPort: metrics
+    name: metrics
+  selector:
+    app: ai-cloud
+    component: coding
+{{- end }}
+
+{{- if .Values.security.enabled }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ai-cloud-security
+  labels:
+    app: ai-cloud
+    component: security
+spec:
+  type: {{ .Values.security.service.type }}
+  ports:
+  - port: {{ .Values.security.service.port }}
+    targetPort: http
+    name: http
+  - port: {{ .Values.security.service.metricsPort }}
+    targetPort: metrics
+    name: metrics
+  selector:
+    app: ai-cloud
+    component: security
+{{- end }}
+
+{{- if .Values.optimization.enabled }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ai-cloud-optimization
+  labels:
+    app: ai-cloud
+    component: optimization
+spec:
+  type: {{ .Values.optimization.service.type }}
+  ports:
+  - port: {{ .Values.optimization.service.port }}
+    targetPort: http
+    name: http
+  - port: {{ .Values.optimization.service.metricsPort }}
+    targetPort: metrics
+    name: metrics
+  selector:
+    app: ai-cloud
+    component: optimization
+{{- end }}
+

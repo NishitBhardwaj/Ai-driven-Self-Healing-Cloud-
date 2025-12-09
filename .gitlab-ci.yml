@@ -1,0 +1,234 @@
+stages:
+  - test
+  - build
+  - security
+  - deploy
+
+variables:
+  DOCKER_DRIVER: overlay2
+  DOCKER_TLS_CERTDIR: "/certs"
+  REGISTRY: $CI_REGISTRY
+  IMAGE_PREFIX: $CI_REGISTRY_IMAGE
+
+# Go Unit Tests
+test:go:
+  stage: test
+  image: golang:1.21
+  services:
+    - docker:dind
+  before_script:
+    - go version
+    - go mod download
+  script:
+    - go test -v -race -coverprofile=coverage.out ./tests/agents/...
+    - go test -v -race -coverprofile=coverage-integration.out ./tests/integration/...
+  coverage: '/coverage: \d+\.\d+% of statements/'
+  artifacts:
+    reports:
+      coverage_report:
+        coverage_format: cobertura
+        path: coverage.out
+    paths:
+      - coverage.out
+      - coverage-integration.out
+    expire_in: 1 week
+
+# Python Unit Tests
+test:python:
+  stage: test
+  image: python:3.11
+  before_script:
+    - python --version
+    - pip install --upgrade pip
+    - pip install pytest pytest-cov
+    - |
+      if [ -f agents/coding/requirements.txt ]; then
+        pip install -r agents/coding/requirements.txt
+      fi
+      if [ -f agents/security/requirements.txt ]; then
+        pip install -r agents/security/requirements.txt
+      fi
+      if [ -f agents/optimization/requirements.txt ]; then
+        pip install -r agents/optimization/requirements.txt
+      fi
+  script:
+    - pytest tests/agents/*_test.py -v --cov=agents --cov-report=xml --cov-report=term
+  coverage: '/TOTAL.*\s+(\d+%)$/'
+  artifacts:
+    reports:
+      coverage_report:
+        coverage_format: cobertura
+        path: coverage.xml
+    paths:
+      - coverage.xml
+    expire_in: 1 week
+
+# Go Linting
+lint:go:
+  stage: test
+  image: golangci/golangci-lint:latest
+  script:
+    - golangci-lint run --timeout=5m ./...
+
+# Python Linting
+lint:python:
+  stage: test
+  image: python:3.11
+  before_script:
+    - pip install flake8 black pylint
+  script:
+    - flake8 agents/ --count --select=E9,F63,F7,F82 --show-source --statistics
+    - black --check agents/
+
+# Build Docker Images
+build:self-healing:
+  stage: build
+  image: docker:24
+  services:
+    - docker:24-dind
+  before_script:
+    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+  script:
+    - docker build -t $IMAGE_PREFIX-self-healing:$CI_COMMIT_SHA -t $IMAGE_PREFIX-self-healing:latest -f docker/agents/self-healing/Dockerfile .
+    - docker push $IMAGE_PREFIX-self-healing:$CI_COMMIT_SHA
+    - docker push $IMAGE_PREFIX-self-healing:latest
+  only:
+    - main
+    - develop
+    - merge_requests
+
+build:scaling:
+  stage: build
+  image: docker:24
+  services:
+    - docker:24-dind
+  before_script:
+    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+  script:
+    - docker build -t $IMAGE_PREFIX-scaling:$CI_COMMIT_SHA -t $IMAGE_PREFIX-scaling:latest -f docker/agents/scaling/Dockerfile .
+    - docker push $IMAGE_PREFIX-scaling:$CI_COMMIT_SHA
+    - docker push $IMAGE_PREFIX-scaling:latest
+  only:
+    - main
+    - develop
+    - merge_requests
+
+build:task-solving:
+  stage: build
+  image: docker:24
+  services:
+    - docker:24-dind
+  before_script:
+    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+  script:
+    - docker build -t $IMAGE_PREFIX-task-solving:$CI_COMMIT_SHA -t $IMAGE_PREFIX-task-solving:latest -f docker/agents/task-solving/Dockerfile .
+    - docker push $IMAGE_PREFIX-task-solving:$CI_COMMIT_SHA
+    - docker push $IMAGE_PREFIX-task-solving:latest
+  only:
+    - main
+    - develop
+    - merge_requests
+
+build:performance-monitoring:
+  stage: build
+  image: docker:24
+  services:
+    - docker:24-dind
+  before_script:
+    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+  script:
+    - docker build -t $IMAGE_PREFIX-performance-monitoring:$CI_COMMIT_SHA -t $IMAGE_PREFIX-performance-monitoring:latest -f docker/agents/performance-monitoring/Dockerfile .
+    - docker push $IMAGE_PREFIX-performance-monitoring:$CI_COMMIT_SHA
+    - docker push $IMAGE_PREFIX-performance-monitoring:latest
+  only:
+    - main
+    - develop
+    - merge_requests
+
+build:python-agents:
+  stage: build
+  image: docker:24
+  services:
+    - docker:24-dind
+  parallel:
+    matrix:
+      - AGENT: coding
+      - AGENT: security
+      - AGENT: optimization
+  before_script:
+    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+  script:
+    - docker build -t $IMAGE_PREFIX-$AGENT:$CI_COMMIT_SHA -t $IMAGE_PREFIX-$AGENT:latest -f docker/agents/$AGENT/Dockerfile .
+    - docker push $IMAGE_PREFIX-$AGENT:$CI_COMMIT_SHA
+    - docker push $IMAGE_PREFIX-$AGENT:latest
+  only:
+    - main
+    - develop
+    - merge_requests
+
+# Security Scanning
+security:scan:
+  stage: security
+  image: aquasec/trivy:latest
+  script:
+    - trivy fs --severity HIGH,CRITICAL --exit-code 1 .
+  allow_failure: true
+  artifacts:
+    reports:
+      sast: gl-sast-report.json
+
+# Deploy to Kubernetes
+deploy:staging:
+  stage: deploy
+  image: bitnami/kubectl:latest
+  environment:
+    name: staging
+    url: https://staging.ai-cloud.example.com
+  before_script:
+    - kubectl version --client
+    - helm version
+  script:
+    - kubectl config use-context $KUBE_CONTEXT_STAGING
+    - kubectl create namespace ai-cloud-staging --dry-run=client -o yaml | kubectl apply -f -
+    - |
+      helm upgrade --install ai-cloud \
+        kubernetes/helm/ai-cloud \
+        --namespace ai-cloud-staging \
+        --set image.registry=$REGISTRY \
+        --set image.prefix=$IMAGE_PREFIX \
+        --set image.tag=$CI_COMMIT_SHA \
+        --set environment=staging \
+        --wait \
+        --timeout 10m
+    - kubectl rollout status deployment/ai-cloud-self-healing -n ai-cloud-staging --timeout=5m
+  only:
+    - develop
+  when: manual
+
+deploy:production:
+  stage: deploy
+  image: bitnami/kubectl:latest
+  environment:
+    name: production
+    url: https://ai-cloud.example.com
+  before_script:
+    - kubectl version --client
+    - helm version
+  script:
+    - kubectl config use-context $KUBE_CONTEXT_PRODUCTION
+    - kubectl create namespace ai-cloud-production --dry-run=client -o yaml | kubectl apply -f -
+    - |
+      helm upgrade --install ai-cloud \
+        kubernetes/helm/ai-cloud \
+        --namespace ai-cloud-production \
+        --set image.registry=$REGISTRY \
+        --set image.prefix=$IMAGE_PREFIX \
+        --set image.tag=$CI_COMMIT_SHA \
+        --set environment=production \
+        --wait \
+        --timeout 10m
+    - kubectl rollout status deployment/ai-cloud-self-healing -n ai-cloud-production --timeout=5m
+  only:
+    - main
+  when: manual
+

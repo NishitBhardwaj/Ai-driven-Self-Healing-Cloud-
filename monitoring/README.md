@@ -1,339 +1,280 @@
-# Monitoring Directory
+# Monitoring, Logging & Security - Complete Guide
 
-This folder contains configuration files and dashboards for monitoring and logging the multi-agent system. Monitoring ensures system health, performance optimization, and quick issue detection.
+This directory contains comprehensive monitoring, logging, and security configurations for the AI-Driven Self-Healing Cloud system.
 
 ## Overview
 
-The monitoring setup includes:
+The monitoring and logging system provides:
+- **Centralized Logging**: ELK Stack (Elasticsearch, Logstash, Kibana)
+- **Metrics Collection**: Prometheus for time-series metrics
+- **Visualization**: Grafana dashboards for real-time monitoring
+- **Alerting**: Alertmanager for proactive notifications
+- **Security Monitoring**: Security-specific dashboards and alerts
 
-- **Prometheus**: Metrics collection and storage
-- **Grafana**: Visualization and dashboards
-- **ELK Stack**: Centralized logging (Elasticsearch, Logstash, Kibana)
+## Directory Structure
 
-## Prometheus
+```
+monitoring/
+├── prometheus/
+│   └── k8s-prometheus.yml          # Kubernetes Prometheus config
+├── grafana/
+│   └── dashboards/
+│       ├── system-health-dashboard.json
+│       ├── agent-performance-dashboard.json
+│       ├── resource-usage-dashboard.json
+│       ├── error-rates-dashboard.json
+│       ├── event-flows-dashboard.json
+│       ├── security-monitoring-dashboard.json  # NEW
+│       └── agent-actions-dashboard.json        # NEW
+├── alertmanager/
+│   └── alertmanager.yml            # Alert routing configuration
+└── README.md                       # This file
 
-Prometheus is used for collecting and storing metrics from agents and services.
+config/
+├── monitoring/
+│   ├── prometheus.yml              # Prometheus configuration
+│   ├── alerts.yml                  # Alerting rules
+│   └── prometheus_metrics.go       # Go metrics library
+└── logging/
+    ├── elk-docker-compose.yml      # ELK Stack setup
+    ├── logstash.conf               # Logstash pipeline
+    ├── elasticsearch.yml           # Elasticsearch config
+    ├── kibana.yml                  # Kibana config
+    └── agent_logger.go             # Go logging library
 
-### Configuration
+kubernetes/
+└── monitoring/
+    └── servicemonitor.yaml         # ServiceMonitor for Prometheus
+```
 
-Configuration files are located in `/monitoring/prometheus/`:
+## Components
 
-- **`prometheus.yml`**: Main Prometheus configuration
-- **`alerts.yml`**: Alerting rules
-- **`targets/`**: Service discovery targets
+### 1. ELK Stack (Elasticsearch, Logstash, Kibana)
 
-### Setup
+**Purpose**: Centralized logging and log analysis
 
+**Setup**:
+```bash
+cd config/logging
+docker-compose -f elk-docker-compose.yml up -d
+```
+
+**Access**:
+- Elasticsearch: http://localhost:9200
+- Kibana: http://localhost:5601
+- Logstash: http://localhost:5000
+
+**Features**:
+- Structured logging from all agents
+- Log aggregation and indexing
+- Search and analysis in Kibana
+- Pre-built dashboards for agent logs
+
+**Documentation**: See `config/logging/README.md`
+
+### 2. Prometheus
+
+**Purpose**: Metrics collection and time-series database
+
+**Configuration**:
+- `config/monitoring/prometheus.yml`: Standard Prometheus config
+- `monitoring/prometheus/k8s-prometheus.yml`: Kubernetes-optimized config
+
+**Setup**:
 ```bash
 # Using Docker
 docker run -d \
-  --name prometheus \
   -p 9090:9090 \
-  -v $(pwd)/monitoring/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml \
+  -v $(pwd)/config/monitoring/prometheus.yml:/etc/prometheus/prometheus.yml \
   prom/prometheus
+
+# Using Kubernetes
+kubectl apply -f kubernetes/monitoring/servicemonitor.yaml
 ```
 
-### Access Prometheus
+**Access**: http://localhost:9090
 
-Open http://localhost:9090 in your browser.
+**Metrics Collected**:
+- Agent health and status
+- CPU and memory usage
+- Action success/failure rates
+- Task completion rates
+- Security events
+- System resources
 
-### Metrics Endpoints
+### 3. Grafana
 
-Agents should expose metrics at `/metrics` endpoint:
+**Purpose**: Metrics visualization and dashboards
 
-```python
-from prometheus_client import Counter, Gauge, Histogram, start_http_server
+**Dashboards**:
+1. **System Health Dashboard**: Overall system health
+2. **Agent Performance Dashboard**: Individual agent performance
+3. **Resource Usage Dashboard**: CPU, memory, disk usage
+4. **Error Rates Dashboard**: Error rates and failures
+5. **Event Flows Dashboard**: Event timeline and flows
+6. **Security Monitoring Dashboard**: Security events and alerts (NEW)
+7. **Agent Actions Dashboard**: Action rates and success rates (NEW)
 
-# Define metrics
-tasks_processed = Counter('tasks_processed_total', 'Total tasks processed')
-agent_uptime = Gauge('agent_uptime_seconds', 'Agent uptime in seconds')
-task_duration = Histogram('task_duration_seconds', 'Task processing duration')
-
-# Start metrics server
-start_http_server(8080)
-```
-
-### Alerting Rules
-
-Define alerts in `/monitoring/prometheus/alerts.yml`:
-
-```yaml
-groups:
-  - name: agent_alerts
-    rules:
-      - alert: AgentDown
-        expr: up{job="self-healing-agent"} == 0
-        for: 1m
-        annotations:
-          summary: "Self-healing agent is down"
-```
-
-## Grafana
-
-Grafana provides visualization dashboards for Prometheus metrics.
-
-### Configuration
-
-Configuration files are located in `/monitoring/grafana/`:
-
-- **`dashboards/`**: Dashboard JSON files
-- **`provisioning/`**: Data sources and dashboard provisioning
-
-### Setup
-
+**Setup**:
 ```bash
 # Using Docker
 docker run -d \
-  --name grafana \
   -p 3000:3000 \
-  -v $(pwd)/monitoring/grafana/dashboards:/var/lib/grafana/dashboards \
+  -v $(pwd)/monitoring/grafana/dashboards:/etc/grafana/provisioning/dashboards \
   grafana/grafana
+
+# Using Kubernetes
+kubectl apply -f monitoring/grafana/
 ```
 
-### Access Grafana
+**Access**: http://localhost:3000 (admin/admin)
 
-Open http://localhost:3000 and log in with:
-- Username: `admin`
-- Password: `admin` (change on first login)
+**Import Dashboards**:
+1. Go to Grafana UI
+2. Navigate to Dashboards → Import
+3. Upload dashboard JSON files from `monitoring/grafana/dashboards/`
 
-### Dashboards
+### 4. Alertmanager
 
-Pre-configured dashboards are available in `/monitoring/grafana/dashboards/`:
+**Purpose**: Alert routing and notification
 
-- **Agent Performance**: CPU, memory, request rates
-- **System Health**: Overall system status
-- **Error Rates**: Error tracking and alerting
-- **Resource Usage**: Cloud resource utilization
+**Configuration**: `monitoring/alertmanager/alertmanager.yml`
 
-### Creating Dashboards
+**Features**:
+- Route alerts by severity
+- Multiple notification channels (Email, Slack, PagerDuty)
+- Alert grouping and deduplication
+- Inhibition rules
 
-1. Go to Grafana UI → Dashboards → New Dashboard
-2. Add panels with Prometheus queries
-3. Export dashboard JSON to `/monitoring/grafana/dashboards/`
-
-## ELK Stack
-
-ELK Stack provides centralized logging for all agents and services.
-
-### Components
-
-- **Elasticsearch**: Log storage and search
-- **Logstash**: Log processing and transformation
-- **Kibana**: Log visualization and analysis
-
-### Configuration
-
-Configuration files are located in `/monitoring/elk/`:
-
-- **`elasticsearch/`**: Elasticsearch configuration
-- **`logstash/`**: Logstash pipeline configuration
-- **`kibana/`**: Kibana configuration
-
-### Setup
-
+**Setup**:
 ```bash
-# Using Docker Compose
-cd monitoring/elk
-docker-compose up -d
+# Using Docker
+docker run -d \
+  -p 9093:9093 \
+  -v $(pwd)/monitoring/alertmanager/alertmanager.yml:/etc/alertmanager/alertmanager.yml \
+  prom/alertmanager
 ```
 
-### Logging from Agents
+**Access**: http://localhost:9093
 
-Agents should send logs to Logstash:
+### 5. Kubernetes ServiceMonitor
 
-```python
-import logging
-import logstash
+**Purpose**: Automatic metric discovery in Kubernetes
 
-# Configure logging
-logger = logging.getLogger('agent')
-logger.addHandler(logstash.TCPLogstashHandler('localhost', 5000, version=1))
-logger.setLevel(logging.INFO)
+**File**: `kubernetes/monitoring/servicemonitor.yaml`
 
-# Log events
-logger.info('Agent started', extra={'agent_name': 'self-healing'})
+**Features**:
+- Automatic discovery of agent pods
+- Scraping configuration
+- Label-based filtering
+
+**Apply**:
+```bash
+kubectl apply -f kubernetes/monitoring/servicemonitor.yaml
 ```
 
-### Access Kibana
+## Alerting Rules
 
-Open http://localhost:5601 in your browser.
+### Critical Alerts
 
-## Agent Instrumentation
+- **AgentDown**: Agent is down for more than 1 minute
+- **SecurityIntrusionDetected**: Security intrusion detected
+- **SystemHighLoad**: System load above threshold
 
-### Metrics
+### Warning Alerts
 
-Expose Prometheus metrics:
+- **AgentHighErrorRate**: High error rate for agent
+- **HighCPUUsage**: CPU usage above 90%
+- **HighMemoryUsage**: Memory usage above 90%
+- **DiskSpaceLow**: Disk space below 10%
 
-```python
-from prometheus_client import Counter, Histogram, Gauge
+### Security Alerts
 
-# Define metrics
-agent_requests = Counter('agent_requests_total', 'Total requests', ['agent', 'status'])
-agent_latency = Histogram('agent_latency_seconds', 'Request latency', ['agent'])
-agent_active = Gauge('agent_active_tasks', 'Active tasks', ['agent'])
+- **SecurityIntrusionDetected**: Immediate notification
+- **BlockedAttacks**: High number of blocked attacks
 
-# Use metrics
-agent_requests.labels(agent='self-healing', status='success').inc()
-agent_latency.labels(agent='self-healing').observe(0.5)
-agent_active.labels(agent='self-healing').set(5)
-```
+## Monitoring Best Practices
 
-### Logging
+1. **Set Appropriate Thresholds**: Adjust alert thresholds based on your environment
+2. **Monitor Key Metrics**: Focus on metrics that indicate system health
+3. **Regular Dashboard Review**: Review dashboards regularly for trends
+4. **Alert Tuning**: Tune alerts to reduce false positives
+5. **Log Retention**: Set appropriate log retention policies
+6. **Backup Metrics**: Backup Prometheus data regularly
 
-Structured logging with context:
+## Security Monitoring
 
-```python
-import logging
-import json
+### Security Dashboard
 
-logger = logging.getLogger('agent')
+The Security Monitoring Dashboard provides:
+- Intrusion alerts over time
+- Blocked attacks statistics
+- Top attack sources
+- Security agent health
 
-def log_with_context(level, message, **context):
-    log_data = {
-        'message': message,
-        'agent': 'self-healing',
-        'timestamp': datetime.utcnow().isoformat(),
-        **context
-    }
-    getattr(logger, level)(json.dumps(log_data))
-```
+### Security Alerts
 
-### Tracing
-
-Distributed tracing for request flows:
-
-```python
-from opentelemetry import trace
-
-tracer = trace.get_tracer(__name__)
-
-with tracer.start_as_current_span("process_task") as span:
-    span.set_attribute("task_id", task_id)
-    span.set_attribute("agent", "self-healing")
-    # Process task
-```
-
-## Key Metrics to Monitor
-
-### Agent Metrics
-
-- **Request Rate**: Requests per second
-- **Error Rate**: Errors per second
-- **Latency**: P50, P95, P99 latencies
-- **Active Tasks**: Number of active tasks
-- **Queue Depth**: Pending tasks in queue
-
-### System Metrics
-
-- **CPU Usage**: Per agent and overall
-- **Memory Usage**: Per agent and overall
-- **Network I/O**: Network traffic
-- **Disk I/O**: Disk read/write operations
-
-### Business Metrics
-
-- **Tasks Completed**: Total tasks processed
-- **Success Rate**: Percentage of successful tasks
-- **Recovery Time**: Time to recover from failures
-- **Cost**: Cloud resource costs
-
-## Alerting
-
-### Alert Channels
-
-Configure alert channels in Prometheus:
-
-- **Email**: Send alerts via email
-- **Slack**: Send alerts to Slack channels
-- **PagerDuty**: Integrate with PagerDuty
-- **Webhooks**: Custom webhook integrations
-
-### Alert Examples
-
-```yaml
-- alert: HighErrorRate
-  expr: rate(agent_errors_total[5m]) > 0.1
-  for: 5m
-  annotations:
-    summary: "High error rate detected"
-
-- alert: HighLatency
-  expr: histogram_quantile(0.95, agent_latency_seconds) > 1
-  for: 5m
-  annotations:
-    summary: "High latency detected"
-```
-
-## Log Analysis
-
-### Common Log Queries
-
-**Find errors in last hour:**
-```
-level:ERROR AND timestamp:[now-1h TO now]
-```
-
-**Find slow requests:**
-```
-duration:>1s AND agent:self-healing
-```
-
-**Find failed tasks:**
-```
-status:failed AND agent:task-solving
-```
-
-## Performance Monitoring
-
-### APM (Application Performance Monitoring)
-
-Monitor application performance:
-
-- **Transaction Tracing**: Track request flows
-- **Database Queries**: Monitor query performance
-- **External API Calls**: Track external service calls
-- **Error Tracking**: Capture and analyze errors
-
-## Cost Monitoring
-
-Monitor cloud resource costs:
-
-- **Resource Usage**: Track resource consumption
-- **Cost Allocation**: Allocate costs by agent/service
-- **Cost Optimization**: Identify cost-saving opportunities
-
-## Best Practices
-
-1. **Comprehensive Metrics**: Monitor all critical metrics
-2. **Alert Fatigue**: Avoid too many alerts; focus on actionable alerts
-3. **Dashboard Design**: Create clear, actionable dashboards
-4. **Log Retention**: Set appropriate log retention policies
-5. **Performance Impact**: Minimize monitoring overhead
-6. **Documentation**: Document metrics and alerts
+- **Intrusion Detected**: Immediate critical alert
+- **High Attack Rate**: Warning when attack rate is high
+- **Security Agent Down**: Critical alert if security agent is down
 
 ## Troubleshooting
 
 ### Prometheus Not Scraping
 
-- Check service discovery configuration
-- Verify metrics endpoints are accessible
-- Check network connectivity
+1. Check ServiceMonitor:
+```bash
+kubectl get servicemonitor -n ai-cloud-production
+kubectl describe servicemonitor ai-cloud-agents -n ai-cloud-production
+```
 
-### Grafana Dashboards Not Loading
+2. Check Prometheus targets:
+```bash
+# Access Prometheus UI
+# Navigate to Status → Targets
+```
 
-- Verify Prometheus data source configuration
-- Check dashboard JSON syntax
-- Verify time range settings
+3. Check pod annotations:
+```bash
+kubectl get pod <pod-name> -n ai-cloud-production -o yaml | grep prometheus
+```
 
-### ELK Stack Issues
+### Grafana Not Showing Data
 
-- Check Elasticsearch cluster health
-- Verify Logstash pipeline configuration
-- Check log ingestion rates
+1. Check data source:
+```bash
+# In Grafana UI: Configuration → Data Sources
+# Verify Prometheus data source is configured
+```
 
-## Related Documentation
+2. Check query:
+```bash
+# Test query in Prometheus UI first
+# Then use same query in Grafana
+```
 
-- Kubernetes monitoring: `/kubernetes/README.md`
-- Agent development: `/agents/README.md`
-- CI/CD pipeline: `/ci-cd/README.md`
+### ELK Stack Not Receiving Logs
 
+1. Check Logstash:
+```bash
+docker logs logstash
+```
+
+2. Check Elasticsearch:
+```bash
+curl http://localhost:9200/_cluster/health
+```
+
+3. Check agent logging:
+```bash
+# Verify agents are sending logs to Logstash
+# Check agent logs for errors
+```
+
+## Next Steps
+
+1. **Deploy Monitoring Stack**: Deploy Prometheus, Grafana, and ELK
+2. **Import Dashboards**: Import Grafana dashboards
+3. **Configure Alerts**: Set up Alertmanager with your notification channels
+4. **Monitor**: Start monitoring your system
+5. **Tune**: Adjust thresholds and alerts based on actual usage

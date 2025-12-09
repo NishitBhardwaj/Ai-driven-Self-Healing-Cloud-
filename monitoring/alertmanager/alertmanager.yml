@@ -1,0 +1,138 @@
+# Alertmanager Configuration
+# Routes alerts to appropriate channels
+
+global:
+  resolve_timeout: 5m
+  slack_api_url: '${SLACK_WEBHOOK_URL}'
+  pagerduty_url: '${PAGERDUTY_URL}'
+
+# Route tree
+route:
+  receiver: 'default-receiver'
+  group_by: ['alertname', 'cluster', 'service']
+  group_wait: 10s
+  group_interval: 10s
+  repeat_interval: 12h
+  routes:
+  # Critical alerts - immediate notification
+  - match:
+      severity: critical
+    receiver: 'critical-alerts'
+    continue: true
+    group_wait: 0s
+    group_interval: 5m
+    repeat_interval: 3h
+  
+  # Security alerts - immediate notification
+  - match:
+      alertname: SecurityIntrusionDetected
+    receiver: 'security-alerts'
+    continue: true
+    group_wait: 0s
+  
+  # Warning alerts - delayed notification
+  - match:
+      severity: warning
+    receiver: 'warning-alerts'
+    group_wait: 5m
+    group_interval: 10m
+    repeat_interval: 6h
+  
+  # Agent down alerts
+  - match:
+      alertname: AgentDown
+    receiver: 'agent-alerts'
+    continue: true
+    group_wait: 1m
+
+# Receivers
+receivers:
+- name: 'default-receiver'
+  email_configs:
+  - to: 'ops@example.com'
+    from: 'alertmanager@example.com'
+    smarthost: 'smtp.example.com:587'
+    auth_username: 'alertmanager@example.com'
+    auth_password: '${SMTP_PASSWORD}'
+    headers:
+      Subject: 'AI Cloud Alert: {{ .GroupLabels.alertname }}'
+
+- name: 'critical-alerts'
+  email_configs:
+  - to: 'oncall@example.com'
+    from: 'alertmanager@example.com'
+    smarthost: 'smtp.example.com:587'
+    auth_username: 'alertmanager@example.com'
+    auth_password: '${SMTP_PASSWORD}'
+    headers:
+      Subject: '🚨 CRITICAL: {{ .GroupLabels.alertname }}'
+  slack_configs:
+  - api_url: '${SLACK_WEBHOOK_URL}'
+    channel: '#alerts-critical'
+    title: '🚨 Critical Alert'
+    text: '{{ range .Alerts }}{{ .Annotations.description }}{{ end }}'
+    send_resolved: true
+  pagerduty_configs:
+  - service_key: '${PAGERDUTY_SERVICE_KEY}'
+    description: '{{ .GroupLabels.alertname }}: {{ .CommonAnnotations.summary }}'
+
+- name: 'security-alerts'
+  email_configs:
+  - to: 'security@example.com'
+    from: 'alertmanager@example.com'
+    smarthost: 'smtp.example.com:587'
+    auth_username: 'alertmanager@example.com'
+    auth_password: '${SMTP_PASSWORD}'
+    headers:
+      Subject: '🔒 SECURITY ALERT: {{ .GroupLabels.alertname }}'
+  slack_configs:
+  - api_url: '${SLACK_WEBHOOK_URL}'
+    channel: '#security-alerts'
+    title: '🔒 Security Alert'
+    text: '{{ range .Alerts }}{{ .Annotations.description }}{{ end }}'
+    send_resolved: true
+  pagerduty_configs:
+  - service_key: '${PAGERDUTY_SECURITY_KEY}'
+    description: 'Security Alert: {{ .GroupLabels.alertname }}'
+
+- name: 'warning-alerts'
+  email_configs:
+  - to: 'ops@example.com'
+    from: 'alertmanager@example.com'
+    smarthost: 'smtp.example.com:587'
+    auth_username: 'alertmanager@example.com'
+    auth_password: '${SMTP_PASSWORD}'
+    headers:
+      Subject: '⚠️ Warning: {{ .GroupLabels.alertname }}'
+  slack_configs:
+  - api_url: '${SLACK_WEBHOOK_URL}'
+    channel: '#alerts-warning'
+    title: '⚠️ Warning Alert'
+    text: '{{ range .Alerts }}{{ .Annotations.description }}{{ end }}'
+    send_resolved: true
+
+- name: 'agent-alerts'
+  email_configs:
+  - to: 'agents@example.com'
+    from: 'alertmanager@example.com'
+    smarthost: 'smtp.example.com:587'
+    auth_username: 'alertmanager@example.com'
+    auth_password: '${SMTP_PASSWORD}'
+    headers:
+      Subject: 'Agent Alert: {{ .GroupLabels.job }} is down'
+  slack_configs:
+  - api_url: '${SLACK_WEBHOOK_URL}'
+    channel: '#agent-alerts'
+    title: 'Agent Down'
+    text: 'Agent {{ .GroupLabels.job }} has been down for more than 1 minute.'
+    send_resolved: true
+
+# Inhibition rules
+inhibit_rules:
+# Inhibit warning alerts when critical alerts are firing
+- source_match:
+    severity: 'critical'
+  target_match:
+    severity: 'warning'
+  equal: ['alertname', 'cluster', 'service']
+

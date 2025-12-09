@@ -10,6 +10,7 @@ import logging
 from typing import Dict, Any, Optional
 from optimizer import CostOptimizer
 from elk_logging import get_elk_logger
+from self_optimization import SelfOptimizationSystem
 
 
 class OptimizationAgent:
@@ -22,6 +23,7 @@ class OptimizationAgent:
         self.status = "stopped"
         self.logger = self._setup_logger()
         self.optimizer = CostOptimizer()
+        self.self_optimization = SelfOptimizationSystem()
     
     def _setup_logger(self) -> logging.Logger:
         """Setup logger for the agent"""
@@ -39,11 +41,15 @@ class OptimizationAgent:
         """Start the agent"""
         self.logger.info(f"Starting {self.name}")
         self.status = "running"
+        # Start self-optimization system
+        self.self_optimization.start()
         return True
     
     def stop(self) -> bool:
         """Stop the agent"""
         self.logger.info(f"Stopping {self.name}")
+        # Stop self-optimization system
+        self.self_optimization.stop()
         self.status = "stopped"
         return True
     
@@ -110,6 +116,65 @@ class OptimizationAgent:
         """Provide explanation for actions (Explainability Layer)"""
         from explain import explain_action
         return explain_action(self.name, input_data, output_data)
+    
+    def get_optimization_summary(self) -> Dict[str, Any]:
+        """Get comprehensive optimization summary"""
+        return self.self_optimization.get_optimization_summary()
+    
+    def get_cost_recommendations(self) -> Dict[str, Any]:
+        """Get cost-saving recommendations"""
+        recommendations = self.self_optimization.get_cost_recommendations()
+        return {
+            "recommendations": recommendations,
+            "count": len(recommendations),
+            "total_potential_savings": sum(r.get("potential_savings", 0) for r in recommendations)
+        }
+    
+    def record_resource_metrics(
+        self,
+        cpu_usage: float,
+        memory_usage: float,
+        disk_usage: float,
+        network_io: float,
+        response_time: float,
+        throughput: float,
+        error_rate: float,
+        cost_per_hour: float
+    ):
+        """Record resource metrics for optimization"""
+        self.self_optimization.record_resource_metrics(
+            cpu_usage=cpu_usage,
+            memory_usage=memory_usage,
+            disk_usage=disk_usage,
+            network_io=network_io,
+            response_time=response_time,
+            throughput=throughput,
+            error_rate=error_rate,
+            cost_per_hour=cost_per_hour
+        )
+    
+    def get_scaling_decision(
+        self,
+        current_cpu: float,
+        current_memory: float,
+        current_requests: float,
+        current_replicas: int
+    ) -> Dict[str, Any]:
+        """Get optimized scaling decision based on load predictions"""
+        decision = self.self_optimization.get_scaling_decision(
+            current_cpu=current_cpu,
+            current_memory=current_memory,
+            current_requests=current_requests,
+            current_replicas=current_replicas
+        )
+        return {
+            "action": decision.action,
+            "target_replicas": decision.target_replicas,
+            "reasoning": decision.reasoning,
+            "confidence": decision.confidence,
+            "predicted_cpu": decision.predicted_cpu,
+            "predicted_memory": decision.predicted_memory
+        }
 
 
 def main():

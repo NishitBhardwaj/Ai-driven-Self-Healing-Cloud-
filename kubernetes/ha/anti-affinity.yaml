@@ -1,0 +1,153 @@
+# Pod Anti-Affinity Rules for High Availability
+# Ensures pods are distributed across nodes/zones
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ai-cloud-self-healing-ha
+  namespace: ai-cloud-production
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: ai-cloud
+      component: self-healing
+  template:
+    metadata:
+      labels:
+        app: ai-cloud
+        component: self-healing
+    spec:
+      affinity:
+        # Pod Anti-Affinity: Don't schedule pods on the same node
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 100
+            podAffinityTerm:
+              labelSelector:
+                matchExpressions:
+                - key: component
+                  operator: In
+                  values:
+                  - self-healing
+              topologyKey: kubernetes.io/hostname
+          # Zone Anti-Affinity: Prefer different zones
+          - weight: 50
+            podAffinityTerm:
+              labelSelector:
+                matchExpressions:
+                - key: component
+                  operator: In
+                  values:
+                  - self-healing
+              topologyKey: topology.kubernetes.io/zone
+      containers:
+      - name: self-healing
+        image: ai-cloud/self-healing:latest
+        resources:
+          requests:
+            cpu: 100m
+            memory: 128Mi
+          limits:
+            cpu: 500m
+            memory: 512Mi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ai-cloud-scaling-ha
+  namespace: ai-cloud-production
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: ai-cloud
+      component: scaling
+  template:
+    metadata:
+      labels:
+        app: ai-cloud
+        component: scaling
+    spec:
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 100
+            podAffinityTerm:
+              labelSelector:
+                matchExpressions:
+                - key: component
+                  operator: In
+                  values:
+                  - scaling
+              topologyKey: kubernetes.io/hostname
+          - weight: 50
+            podAffinityTerm:
+              labelSelector:
+                matchExpressions:
+                - key: component
+                  operator: In
+                  values:
+                  - scaling
+              topologyKey: topology.kubernetes.io/zone
+      containers:
+      - name: scaling
+        image: ai-cloud/scaling:latest
+        resources:
+          requests:
+            cpu: 100m
+            memory: 128Mi
+          limits:
+            cpu: 500m
+            memory: 512Mi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ai-cloud-task-solving-ha
+  namespace: ai-cloud-production
+spec:
+  replicas: 5  # Higher replica count for critical service
+  selector:
+    matchLabels:
+      app: ai-cloud
+      component: task-solving
+  template:
+    metadata:
+      labels:
+        app: ai-cloud
+        component: task-solving
+    spec:
+      affinity:
+        podAntiAffinity:
+          # Required: Must be on different nodes
+          requiredDuringSchedulingIgnoredDuringExecution:
+          - labelSelector:
+              matchExpressions:
+              - key: component
+                operator: In
+                values:
+                - task-solving
+            topologyKey: kubernetes.io/hostname
+          # Preferred: Different zones
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 100
+            podAffinityTerm:
+              labelSelector:
+                matchExpressions:
+                - key: component
+                  operator: In
+                  values:
+                  - task-solving
+              topologyKey: topology.kubernetes.io/zone
+      containers:
+      - name: task-solving
+        image: ai-cloud/task-solving:latest
+        resources:
+          requests:
+            cpu: 200m
+            memory: 256Mi
+          limits:
+            cpu: 1000m
+            memory: 1Gi
+

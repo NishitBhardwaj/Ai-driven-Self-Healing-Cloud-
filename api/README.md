@@ -23,13 +23,13 @@ This package provides REST API endpoints for querying agent statuses, logs, and 
       "last_action": {
         "type": "restart_pod",
         "description": "Restarted pod 'web-app-123'",
-        "timestamp": "2024-01-01T12:00:00Z",
+        "timestamp": "YYYY-MM-DDTHH:MM:SSZ",
         "success": true
       },
       "confidence": 0.95,
       "explanation": "Pod was restarted due to crash loop detection...",
       "mode": "auto",
-      "last_update": "2024-01-01T12:00:00Z"
+      "last_update": "YYYY-MM-DDTHH:MM:SSZ"
     }
   ]
 }
@@ -65,7 +65,7 @@ This package provides REST API endpoints for querying agent statuses, logs, and 
   "logs": [
     {
       "id": "log-1",
-      "timestamp": "2024-01-01T12:00:00Z",
+      "timestamp": "YYYY-MM-DDTHH:MM:SSZ",
       "agent_id": "self-healing-001",
       "agent_name": "Self-Healing Agent",
       "action": "restart_pod",
@@ -149,7 +149,7 @@ This package provides REST API endpoints for querying agent statuses, logs, and 
         "status": "success",
         "pod_name": "web-app-123"
       },
-      "timestamp": "2024-01-01T12:00:00Z",
+      "timestamp": "YYYY-MM-DDTHH:MM:SSZ",
       "status": "executed"
     }
   ],

@@ -152,7 +152,7 @@ const explanation = await api.getExplanation('decision-id', 'detailed');
   "execution_result": { ... },
   "explanation": "...",
   "confidence": 0.92,
-  "timestamp": "2024-01-01T12:00:00Z"
+  "timestamp": "YYYY-MM-DDTHH:MM:SSZ"
 }
 ```
 

@@ -1,0 +1,95 @@
+---
+# Ingress for AI Cloud Agents
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: ai-cloud-ingress
+  namespace: ai-cloud-production
+  annotations:
+    kubernetes.io/ingress.class: nginx
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/backend-protocol: "HTTP"
+    nginx.ingress.kubernetes.io/load-balance: "round_robin"
+    nginx.ingress.kubernetes.io/upstream-hash-by: "$request_uri"
+    nginx.ingress.kubernetes.io/proxy-connect-timeout: "60"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "60"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "60"
+    nginx.ingress.kubernetes.io/proxy-body-size: "10m"
+    nginx.ingress.kubernetes.io/rate-limit: "100"
+spec:
+  tls:
+  - hosts:
+    - api.ai-cloud.example.com
+    secretName: ai-cloud-tls
+  rules:
+  # API Gateway
+  - host: api.ai-cloud.example.com
+    http:
+      paths:
+      # Self-Healing Agent
+      - path: /api/self-healing
+        pathType: Prefix
+        backend:
+          service:
+            name: ai-cloud-self-healing
+            port:
+              number: 8080
+      # Scaling Agent
+      - path: /api/scaling
+        pathType: Prefix
+        backend:
+          service:
+            name: ai-cloud-scaling
+            port:
+              number: 8080
+      # Task-Solving Agent
+      - path: /api/task-solving
+        pathType: Prefix
+        backend:
+          service:
+            name: ai-cloud-task-solving
+            port:
+              number: 8080
+      # Performance Monitoring Agent
+      - path: /api/monitoring
+        pathType: Prefix
+        backend:
+          service:
+            name: ai-cloud-performance-monitoring
+            port:
+              number: 8080
+      # Coding Agent
+      - path: /api/coding
+        pathType: Prefix
+        backend:
+          service:
+            name: ai-cloud-coding
+            port:
+              number: 8080
+      # Security Agent
+      - path: /api/security
+        pathType: Prefix
+        backend:
+          service:
+            name: ai-cloud-security
+            port:
+              number: 8080
+      # Optimization Agent
+      - path: /api/optimization
+        pathType: Prefix
+        backend:
+          service:
+            name: ai-cloud-optimization
+            port:
+              number: 8080
+      # Health Check
+      - path: /health
+        pathType: Exact
+        backend:
+          service:
+            name: ai-cloud-self-healing
+            port:
+              number: 8080
+

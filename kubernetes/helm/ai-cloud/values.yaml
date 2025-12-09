@@ -1,0 +1,234 @@
+# Default values for ai-cloud
+# This is a YAML-formatted file.
+
+global:
+  environment: production
+  imageRegistry: ""
+  imagePullSecrets: []
+
+image:
+  registry: ghcr.io
+  prefix: ai-cloud
+  pullPolicy: IfNotPresent
+  tag: "latest"
+
+# Self-Healing Agent
+selfHealing:
+  enabled: true
+  replicaCount: 2
+  image:
+    repository: self-healing
+  service:
+    type: ClusterIP
+    port: 8080
+    metricsPort: 8081
+  resources:
+    limits:
+      cpu: 500m
+      memory: 512Mi
+    requests:
+      cpu: 100m
+      memory: 128Mi
+  autoscaling:
+    enabled: true
+    minReplicas: 2
+    maxReplicas: 10
+    targetCPUUtilizationPercentage: 80
+    targetMemoryUtilizationPercentage: 80
+
+# Scaling Agent
+scaling:
+  enabled: true
+  replicaCount: 2
+  image:
+    repository: scaling
+  service:
+    type: ClusterIP
+    port: 8080
+    metricsPort: 8082
+  resources:
+    limits:
+      cpu: 500m
+      memory: 512Mi
+    requests:
+      cpu: 100m
+      memory: 128Mi
+  autoscaling:
+    enabled: true
+    minReplicas: 2
+    maxReplicas: 10
+    targetCPUUtilizationPercentage: 80
+
+# Task-Solving Agent
+taskSolving:
+  enabled: true
+  replicaCount: 2
+  image:
+    repository: task-solving
+  service:
+    type: ClusterIP
+    port: 8080
+    metricsPort: 8083
+  resources:
+    limits:
+      cpu: 500m
+      memory: 512Mi
+    requests:
+      cpu: 100m
+      memory: 128Mi
+  autoscaling:
+    enabled: true
+    minReplicas: 2
+    maxReplicas: 10
+    targetCPUUtilizationPercentage: 80
+
+# Performance Monitoring Agent
+performanceMonitoring:
+  enabled: true
+  replicaCount: 2
+  image:
+    repository: performance-monitoring
+  service:
+    type: ClusterIP
+    port: 8080
+    metricsPort: 8085
+  resources:
+    limits:
+      cpu: 500m
+      memory: 512Mi
+    requests:
+      cpu: 100m
+      memory: 128Mi
+  autoscaling:
+    enabled: true
+    minReplicas: 2
+    maxReplicas: 10
+    targetCPUUtilizationPercentage: 80
+
+# Coding Agent
+coding:
+  enabled: true
+  replicaCount: 2
+  image:
+    repository: coding
+  service:
+    type: ClusterIP
+    port: 8080
+    metricsPort: 8086
+  resources:
+    limits:
+      cpu: 1000m
+      memory: 1Gi
+    requests:
+      cpu: 200m
+      memory: 256Mi
+  autoscaling:
+    enabled: true
+    minReplicas: 2
+    maxReplicas: 10
+    targetCPUUtilizationPercentage: 80
+
+# Security Agent
+security:
+  enabled: true
+  replicaCount: 2
+  image:
+    repository: security
+  service:
+    type: ClusterIP
+    port: 8080
+    metricsPort: 8084
+  resources:
+    limits:
+      cpu: 500m
+      memory: 512Mi
+    requests:
+      cpu: 100m
+      memory: 128Mi
+  autoscaling:
+    enabled: true
+    minReplicas: 2
+    maxReplicas: 10
+    targetCPUUtilizationPercentage: 80
+
+# Optimization Agent
+optimization:
+  enabled: true
+  replicaCount: 2
+  image:
+    repository: optimization
+  service:
+    type: ClusterIP
+    port: 8080
+    metricsPort: 8087
+  resources:
+    limits:
+      cpu: 500m
+      memory: 512Mi
+    requests:
+      cpu: 100m
+      memory: 128Mi
+  autoscaling:
+    enabled: true
+    minReplicas: 2
+    maxReplicas: 10
+    targetCPUUtilizationPercentage: 80
+
+# Service Account
+serviceAccount:
+  create: true
+  annotations: {}
+  name: ""
+
+# Pod Security Context
+podSecurityContext:
+  fsGroup: 2000
+
+# Security Context
+securityContext:
+  capabilities:
+    drop:
+    - ALL
+  readOnlyRootFilesystem: false
+  runAsNonRoot: true
+  runAsUser: 1000
+
+# Node Selector
+nodeSelector: {}
+
+# Tolerations
+tolerations: []
+
+# Affinity
+affinity: {}
+
+# Ingress
+ingress:
+  enabled: false
+  className: "nginx"
+  annotations: {}
+  hosts:
+    - host: ai-cloud.example.com
+      paths:
+        - path: /
+          pathType: Prefix
+  tls: []
+
+# ConfigMap
+configMap:
+  enabled: true
+  data: {}
+
+# Secrets
+secrets:
+  enabled: true
+  data: {}
+
+# Monitoring
+monitoring:
+  enabled: true
+  serviceMonitor:
+    enabled: true
+    interval: 30s
+    scrapeTimeout: 10s
+

@@ -262,7 +262,7 @@ logs/xai/reasoning_YYYY-MM-DD.log
 
 ```json
 {
-  "@timestamp": "2024-01-01T12:00:00Z",
+  "@timestamp": "YYYY-MM-DDTHH:MM:SSZ",
   "agent_id": "scaling-001",
   "agent_name": "Scaling Agent",
   "action_taken": "scale_up",
@@ -272,7 +272,7 @@ logs/xai/reasoning_YYYY-MM-DD.log
   "mode": "manual",
   "alternative_actions": ["optimize", "restart_service"],
   "context": {...},
-  "timestamp": "2024-01-01T12:00:00Z"
+  "timestamp": "YYYY-MM-DDTHH:MM:SSZ"
 }
 ```
 

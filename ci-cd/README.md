@@ -1,284 +1,279 @@
-# CI/CD Directory
+# CI/CD Pipeline Documentation
 
-This folder contains configuration files and scripts for the Continuous Integration and Continuous Deployment (CI/CD) pipeline. The CI/CD pipeline automates the process of building, testing, and deploying the multi-agent system.
+This directory contains CI/CD pipeline configurations for automated building, testing, and deployment of the AI-Driven Self-Healing Cloud system.
 
 ## Overview
 
-The CI/CD pipeline ensures:
+The CI/CD pipeline automates:
+- **Continuous Integration (CI)**: Automated builds and tests on code push
+- **Continuous Deployment (CD)**: Automated deployment to Kubernetes clusters
+- **Docker Image Building**: Container images for all agents
+- **Security Scanning**: Vulnerability scanning with Trivy
+- **Rolling Updates**: Zero-downtime deployments
 
-- **Continuous Integration**: Automatically integrates code changes, runs tests, and builds artifacts
-- **Continuous Deployment**: Automatically deploys code changes to staging and production environments
-- **Quality Assurance**: Enforces code quality standards and automated testing
-- **Fast Feedback**: Provides quick feedback on code changes
+## Pipeline Flow
 
-## Supported CI/CD Platforms
-
-### Jenkins
-
-Jenkins is an open-source automation server that provides extensive plugin support for building, testing, and deploying applications.
-
-**Configuration Location**: `/ci-cd/jenkins/`
-
-#### Setup
-
-1. **Install Jenkins**:
-
-   ```bash
-   # Using Docker
-   docker run -d \
-     --name jenkins \
-     -p 8080:8080 \
-     -p 50000:50000 \
-     -v jenkins_home:/var/jenkins_home \
-     jenkins/jenkins:lts
-   ```
-
-2. **Access Jenkins**:
-
-   Open http://localhost:8080 and follow the setup wizard.
-
-3. **Pipeline Configuration**:
-
-   Pipeline files (Jenkinsfile) are located in `/ci-cd/jenkins/`:
-   - `Jenkinsfile`: Main pipeline definition
-   - `pipeline-config.groovy`: Pipeline configuration
-   - `deploy-stages.groovy`: Deployment stage definitions
-
-#### Pipeline Stages
-
-1. **Checkout**: Clone the repository
-2. **Build**: Build Docker images for agents
-3. **Test**: Run unit tests and integration tests
-4. **Lint**: Run code quality checks
-5. **Security Scan**: Scan for vulnerabilities
-6. **Deploy to Staging**: Deploy to staging environment
-7. **Integration Tests**: Run end-to-end tests
-8. **Deploy to Production**: Deploy to production (with approval)
-
-### GitLab CI
-
-GitLab CI is integrated into GitLab and provides a simple YAML-based configuration for CI/CD pipelines.
-
-**Configuration Location**: `/ci-cd/gitlab-ci/`
-
-#### Setup
-
-1. **GitLab CI Configuration**:
-
-   The main configuration file is `.gitlab-ci.yml` in the repository root, with additional files in `/ci-cd/gitlab-ci/`:
-   - `.gitlab-ci.yml`: Main pipeline configuration
-   - `stages.yml`: Stage definitions
-   - `deploy.yml`: Deployment configurations
-
-#### Pipeline Stages
-
-```yaml
-stages:
-  - build
-  - test
-  - lint
-  - security
-  - deploy-staging
-  - integration-tests
-  - deploy-production
+```
+Code Push
+    ↓
+Unit Tests (Go + Python)
+    ↓
+Linting (Go + Python)
+    ↓
+Build Docker Images
+    ↓
+Security Scan
+    ↓
+Deploy to Kubernetes
+    ↓
+Smoke Tests
+    ↓
+Rollback on Failure
 ```
 
-## Pipeline Workflow
+## CI/CD Platforms
 
-### 1. Code Commit
+### 1. GitHub Actions
 
-When code is committed to the repository:
+**Location**: `.github/workflows/`
 
+**Workflows**:
+- `ci.yml`: Continuous Integration pipeline
+- `cd.yml`: Continuous Deployment pipeline
+
+**Features**:
+- ✅ Automated on push/PR
+- ✅ Parallel test execution
+- ✅ Docker image building
+- ✅ Kubernetes deployment
+- ✅ Automatic rollback
+
+**Setup**:
+1. Push code to GitHub repository
+2. Configure secrets:
+   - `AWS_ACCESS_KEY_ID`
+   - `AWS_SECRET_ACCESS_KEY`
+   - `AWS_REGION`
+   - `EKS_CLUSTER_NAME`
+3. Workflows run automatically
+
+### 2. GitLab CI
+
+**Location**: `.gitlab-ci.yml`
+
+**Features**:
+- ✅ Multi-stage pipeline
+- ✅ Parallel builds
+- ✅ Manual deployment gates
+- ✅ Coverage reports
+- ✅ Security scanning
+
+**Setup**:
+1. Push code to GitLab repository
+2. Configure CI/CD variables:
+   - `KUBE_CONTEXT_STAGING`
+   - `KUBE_CONTEXT_PRODUCTION`
+3. Pipeline runs automatically
+
+### 3. Jenkins
+
+**Location**: `Jenkinsfile`
+
+**Features**:
+- ✅ Declarative pipeline
+- ✅ Parallel builds
+- ✅ Email notifications
+- ✅ Coverage reports
+- ✅ Automatic rollback
+
+**Setup**:
+1. Install Jenkins plugins:
+   - Docker Pipeline
+   - Kubernetes CLI
+   - Helm
+   - Coverage
+2. Configure credentials:
+   - Docker registry credentials
+   - Kubernetes config
+3. Create pipeline job from Jenkinsfile
+
+## Docker Images
+
+### Go Agents
+
+All Go agents use multi-stage builds:
+- **Builder stage**: Compiles Go application
+- **Runtime stage**: Minimal Alpine image
+
+**Agents**:
+- `self-healing`
+- `scaling`
+- `task-solving`
+- `performance-monitoring`
+
+### Python Agents
+
+Python agents use slim Python images:
+- **Base**: `python:3.11-slim`
+- **Dependencies**: Installed from requirements.txt
+
+**Agents**:
+- `coding`
+- `security`
+- `optimization`
+
+## Kubernetes Deployment
+
+### Helm Charts
+
+**Location**: `kubernetes/helm/ai-cloud/`
+
+**Features**:
+- ✅ All agents configurable
+- ✅ Auto-scaling (HPA)
+- ✅ Resource limits
+- ✅ Health checks
+- ✅ Service monitors for Prometheus
+
+**Deploy**:
 ```bash
-git add .
-git commit -m "Add new feature"
-git push origin main
+helm upgrade --install ai-cloud \
+  kubernetes/helm/ai-cloud \
+  --namespace ai-cloud-production \
+  --set image.tag=v1.0.0 \
+  --set environment=production
 ```
 
-### 2. Build Stage
+### Deployment Strategy
 
-- Builds Docker images for each agent
-- Tags images with commit SHA
-- Pushes images to container registry
+- **Rolling Updates**: Zero-downtime deployments
+- **Health Checks**: Liveness and readiness probes
+- **Auto-Scaling**: Horizontal Pod Autoscaler (HPA)
+- **Resource Management**: CPU and memory limits
 
-### 3. Test Stage
-
-- Runs unit tests for each agent
-- Runs integration tests
-- Generates test coverage reports
-
-### 4. Quality Checks
-
-- Runs linting (ESLint, Pylint)
-- Runs code formatting checks
-- Performs security scanning
-
-### 5. Deploy to Staging
-
-- Deploys agents to staging Kubernetes cluster
-- Runs smoke tests
-- Verifies deployment health
-
-### 6. Integration Tests
-
-- Runs end-to-end tests
-- Tests agent interactions
-- Validates system behavior
-
-### 7. Deploy to Production
-
-- Requires manual approval
-- Deploys to production Kubernetes cluster
-- Monitors deployment health
-- Automatic rollback on failure
-
-## Configuration Files
-
-### Jenkins
-
-- **Jenkinsfile**: Main pipeline definition using Groovy DSL
-- **pipeline-config.groovy**: Shared pipeline configuration
-- **deploy-stages.groovy**: Deployment stage definitions
-
-### GitLab CI
-
-- **.gitlab-ci.yml**: Main pipeline configuration
-- **stages.yml**: Stage definitions and templates
-- **deploy.yml**: Deployment job definitions
-
-## Environment Variables
-
-Set these environment variables in your CI/CD platform:
-
-```bash
-# Container Registry
-DOCKER_REGISTRY=your-registry.com
-DOCKER_USERNAME=your-username
-DOCKER_PASSWORD=your-password
-
-# Kubernetes
-KUBECONFIG_PATH=/path/to/kubeconfig
-KUBERNETES_NAMESPACE=production
-
-# Cloud Credentials (for cloud deployment)
-AWS_ACCESS_KEY_ID=your-key
-AWS_SECRET_ACCESS_KEY=your-secret
-AWS_REGION=us-east-1
-
-# Database
-POSTGRES_HOST=postgres-host
-POSTGRES_PASSWORD=postgres-password
-MONGODB_URI=mongodb://host:27017
-```
-
-## Testing in CI/CD
+## Testing
 
 ### Unit Tests
 
-```bash
-# Python agents
-pytest tests/unit/ --cov=agents --cov-report=xml
-
-# Node.js agents
-npm run test:unit -- --coverage
-```
+- **Go**: `go test ./tests/agents/...`
+- **Python**: `pytest tests/agents/*_test.py`
 
 ### Integration Tests
 
+- **Go**: `go test ./tests/integration/...`
+
+### Smoke Tests
+
+After deployment:
 ```bash
-pytest tests/integration/ --docker-compose
+kubectl run test-client --image=curlimages/curl --rm -it -- \
+  curl -f http://ai-cloud-self-healing:8080/health
 ```
 
-### End-to-End Tests
+## Security
 
-```bash
-pytest tests/e2e/ --kubernetes
-```
+### Scanning
 
-## Deployment Strategies
+- **Trivy**: Vulnerability scanning
+- **CodeQL**: Code analysis (GitHub)
+- **SAST**: Static analysis (GitLab)
 
-### Blue-Green Deployment
+### Best Practices
 
-- Deploy new version alongside old version
-- Switch traffic to new version
-- Keep old version as backup
+- ✅ Scan images before deployment
+- ✅ Use minimal base images
+- ✅ Regular dependency updates
+- ✅ Secrets management
+- ✅ Non-root containers
 
-### Canary Deployment
+## Monitoring
 
-- Deploy new version to subset of instances
-- Monitor performance
-- Gradually roll out to all instances
+### Metrics
 
-### Rolling Deployment
+- Prometheus ServiceMonitors configured
+- Metrics exposed on `/metrics` endpoints
+- Auto-discovered by Prometheus
 
-- Gradually replace old instances with new ones
-- Maintain service availability
-- Automatic rollback on failure
+### Logs
 
-## Monitoring Deployment
+- Centralized logging to ELK Stack
+- Structured JSON logs
+- Log aggregation
 
-Monitor deployments using:
-
-- **Kubernetes**: `kubectl get deployments`
-- **Prometheus**: Deployment metrics
-- **Grafana**: Deployment dashboards
-- **Logs**: Centralized logging (ELK Stack)
-
-## Rollback Procedures
+## Rollback
 
 ### Automatic Rollback
 
-Configure automatic rollback on:
-
-- Health check failures
-- High error rates
-- Performance degradation
+On deployment failure:
+- Helm automatically rolls back
+- Previous version restored
+- Team notified
 
 ### Manual Rollback
 
 ```bash
-# Kubernetes
-kubectl rollout undo deployment/agent-name
-
-# Docker Compose
-docker-compose down
-docker-compose up -d --scale agent-name=previous-version
+helm rollback ai-cloud <revision-number> -n <namespace>
 ```
 
-## Best Practices
+## Environment Promotion
 
-1. **Fast Feedback**: Keep pipeline execution time under 15 minutes
-2. **Parallel Execution**: Run independent tests in parallel
-3. **Caching**: Cache dependencies and build artifacts
-4. **Security**: Never commit secrets; use secret management
-5. **Testing**: Maintain high test coverage (>80%)
-6. **Documentation**: Document pipeline changes and configurations
+### Staging
+
+- Auto-deploy from `develop` branch
+- Manual approval required
+- Smoke tests run
+
+### Production
+
+- Auto-deploy from `main` branch
+- Manual approval required
+- Full test suite
+- Canary deployment (optional)
 
 ## Troubleshooting
 
 ### Build Failures
 
-- Check build logs for errors
-- Verify dependencies are available
-- Check Docker image build context
-
-### Test Failures
-
-- Review test output and logs
-- Check test environment setup
-- Verify test data availability
+1. Check test output
+2. Verify dependencies
+3. Check Docker build logs
+4. Review linting errors
 
 ### Deployment Failures
 
-- Check Kubernetes cluster status
-- Verify resource quotas
-- Check network connectivity
-- Review deployment logs
+1. Check Kubernetes events: `kubectl get events`
+2. Check pod logs: `kubectl logs <pod-name>`
+3. Verify image pull: `kubectl describe pod <pod-name>`
+4. Check resource limits
 
-## Related Documentation
+### Image Pull Errors
 
-- Docker setup: `/docker/README.md`
-- Kubernetes setup: `/kubernetes/README.md`
-- Testing: `/tests/README.md`
-- Monitoring: `/monitoring/README.md`
+1. Verify registry credentials
+2. Check image exists: `docker pull <image>`
+3. Verify permissions
+4. Check network connectivity
 
+## Best Practices
+
+1. **Small Commits**: Frequent, small commits
+2. **Test Coverage**: Maintain >80% coverage
+3. **Security**: Regular vulnerability scans
+4. **Documentation**: Keep README updated
+5. **Monitoring**: Monitor deployment metrics
+6. **Rollback Plan**: Always have rollback strategy
+
+## Next Steps
+
+1. **Configure Secrets**: Set up secret management
+2. **Enable Monitoring**: Configure Prometheus
+3. **Set Up Alerts**: Configure alerting rules
+4. **Optimize Builds**: Cache dependencies
+5. **Multi-Environment**: Set up dev/staging/prod
+
+## Support
+
+For issues:
+- Check pipeline logs
+- Review deployment events
+- Consult troubleshooting guide
+- Contact DevOps team

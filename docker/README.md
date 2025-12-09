@@ -1,324 +1,286 @@
-# Docker Directory
+# Docker Containerization Guide
 
-This folder contains Docker-related files for containerizing and running the AI agents and services. Docker enables consistent deployment across different environments and simplifies the development and testing process.
+This directory contains Dockerfiles and build scripts for containerizing all agents in the AI-Driven Self-Healing Cloud system.
 
 ## Overview
 
-Docker is used to:
-
-- **Containerize Agents**: Package each agent with its dependencies
-- **Local Development**: Run the entire system locally using Docker Compose
-- **Consistent Environments**: Ensure agents run the same way in development, staging, and production
-- **Isolation**: Isolate agents and services from each other
+All agents are containerized using Docker for:
+- **Consistency**: Same environment across development, staging, and production
+- **Portability**: Run anywhere Docker is supported
+- **Isolation**: Each agent runs in its own container
+- **Scalability**: Easy to scale horizontally
+- **Security**: Isolated from host system
 
 ## Directory Structure
 
-- **`/docker/agents/`**: Dockerfiles for individual agents
-- **`/docker/docker-compose/`**: Docker Compose configuration files for local setup
+```
+docker/
+├── agents/
+│   ├── self-healing/
+│   │   └── Dockerfile
+│   ├── scaling/
+│   │   └── Dockerfile
+│   ├── task-solving/
+│   │   └── Dockerfile
+│   ├── performance-monitoring/
+│   │   └── Dockerfile
+│   ├── coding/
+│   │   └── Dockerfile
+│   ├── security/
+│   │   └── Dockerfile
+│   └── optimization/
+│       └── Dockerfile
+├── build.sh          # Linux/Mac build script
+├── build.ps1         # Windows PowerShell build script
+└── README.md         # This file
+```
 
-## Agent Dockerfiles
+## Dockerfiles
 
-Each agent has its own Dockerfile located in `/docker/agents/`. These Dockerfiles define:
+### Go Agents (Self-Healing, Scaling, Task-Solving, Performance-Monitoring)
 
-- Base image (Python, Node.js, etc.)
-- Dependencies and packages
-- Agent code and configuration
-- Entry point and startup commands
+**Multi-stage build**:
+- **Builder stage**: Compiles Go application
+- **Runtime stage**: Minimal Alpine Linux image
 
-### Example Dockerfile Structure
+**Features**:
+- Multi-stage builds for smaller images
+- Health checks included
+- Non-root user (security)
+- Minimal dependencies
 
+### Python Agents (Coding, Security, Optimization)
+
+**Single-stage build**:
+- Python 3.11 slim base image
+- System dependencies installed
+- Python packages from requirements.txt
+
+**Features**:
+- Optimized layer caching
+- Health checks included
+- Minimal base image
+
+## Building Images
+
+### Using Build Scripts
+
+**Linux/Mac**:
+```bash
+# Build all images
+./docker/build.sh build
+
+# Push all images
+./docker/build.sh push
+
+# Build and push all images
+./docker/build.sh all
+```
+
+**Windows PowerShell**:
+```powershell
+# Build all images
+.\docker\build.ps1 -Action build
+
+# Push all images
+.\docker\build.ps1 -Action push
+
+# Build and push all images
+.\docker\build.ps1 -Action all
+```
+
+### Manual Build
+
+**Build single agent**:
+```bash
+docker build -t ai-cloud-self-healing:latest \
+  -f docker/agents/self-healing/Dockerfile .
+```
+
+**Build all agents**:
+```bash
+for agent in self-healing scaling task-solving performance-monitoring coding security optimization; do
+  docker build -t ai-cloud-${agent}:latest \
+    -f docker/agents/${agent}/Dockerfile .
+done
+```
+
+## Container Registries
+
+### GitHub Container Registry (GHCR)
+
+**Login**:
+```bash
+echo $GITHUB_TOKEN | docker login ghcr.io -u USERNAME --password-stdin
+```
+
+**Push**:
+```bash
+docker tag ai-cloud-self-healing:latest ghcr.io/USERNAME/ai-cloud-self-healing:latest
+docker push ghcr.io/USERNAME/ai-cloud-self-healing:latest
+```
+
+### Docker Hub
+
+**Login**:
+```bash
+docker login
+```
+
+**Push**:
+```bash
+docker tag ai-cloud-self-healing:latest USERNAME/ai-cloud-self-healing:latest
+docker push USERNAME/ai-cloud-self-healing:latest
+```
+
+### AWS ECR
+
+**Login**:
+```bash
+aws ecr get-login-password --region us-east-1 | \
+  docker login --username AWS --password-stdin 123456789012.dkr.ecr.us-east-1.amazonaws.com
+```
+
+**Push**:
+```bash
+docker tag ai-cloud-self-healing:latest \
+  123456789012.dkr.ecr.us-east-1.amazonaws.com/ai-cloud-self-healing:latest
+docker push 123456789012.dkr.ecr.us-east-1.amazonaws.com/ai-cloud-self-healing:latest
+```
+
+### Google Container Registry (GCR)
+
+**Login**:
+```bash
+gcloud auth configure-docker
+```
+
+**Push**:
+```bash
+docker tag ai-cloud-self-healing:latest \
+  gcr.io/PROJECT_ID/ai-cloud-self-healing:latest
+docker push gcr.io/PROJECT_ID/ai-cloud-self-healing:latest
+```
+
+### Azure Container Registry (ACR)
+
+**Login**:
+```bash
+az acr login --name REGISTRY_NAME
+```
+
+**Push**:
+```bash
+docker tag ai-cloud-self-healing:latest \
+  REGISTRY_NAME.azurecr.io/ai-cloud-self-healing:latest
+docker push REGISTRY_NAME.azurecr.io/ai-cloud-self-healing:latest
+```
+
+## Environment Variables
+
+Configure build scripts with environment variables:
+
+```bash
+export DOCKER_REGISTRY="ghcr.io"
+export IMAGE_PREFIX="ai-cloud"
+export IMAGE_TAG="v1.0.0"
+
+./docker/build.sh all
+```
+
+## Image Tags
+
+Use semantic versioning for tags:
+
+- `latest`: Latest build (development)
+- `v1.0.0`: Specific version (production)
+- `v1.0.0-abc1234`: Version with commit hash
+- `dev`: Development builds
+
+## Best Practices
+
+1. **Use Multi-Stage Builds**: Reduce image size
+2. **Layer Caching**: Order Dockerfile commands for better caching
+3. **Security Scanning**: Scan images for vulnerabilities
+4. **Tag Appropriately**: Use semantic versioning
+5. **Health Checks**: Include health checks in Dockerfiles
+6. **Non-Root User**: Run containers as non-root when possible
+7. **Minimal Base Images**: Use Alpine or slim variants
+8. **.dockerignore**: Exclude unnecessary files
+
+## Security
+
+### Image Scanning
+
+**Trivy**:
+```bash
+trivy image ai-cloud-self-healing:latest
+```
+
+**Docker Scout**:
+```bash
+docker scout cves ai-cloud-self-healing:latest
+```
+
+### Non-Root User
+
+All Dockerfiles should run as non-root:
 ```dockerfile
-FROM python:3.9-slim
-
-WORKDIR /app
-
-# Install dependencies
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
-
-# Copy agent code
-COPY agents/self-healing/ ./agents/self-healing/
-
-# Set environment variables
-ENV AGENT_NAME=self-healing
-ENV AGENT_MODE=auto
-
-# Run agent
-CMD ["python", "agents/self-healing/self_healing_agent.py"]
+RUN addgroup -g 1000 appuser && \
+    adduser -D -u 1000 -G appuser appuser
+USER appuser
 ```
 
-## Building Agent Images
+## CI/CD Integration
 
-### Build Individual Agent
-
-```bash
-cd docker/agents
-docker build -t self-healing-agent:latest -f self-healing.Dockerfile .
-```
-
-### Build All Agents
-
-```bash
-cd docker/agents
-./build-all.sh
-```
-
-## Docker Compose
-
-Docker Compose allows you to run multiple containers together, simulating the entire multi-agent system locally.
-
-### Configuration Files
-
-Configuration files are located in `/docker/docker-compose/`:
-
-- **`docker-compose.yml`**: Main compose file for local development
-- **`docker-compose.prod.yml`**: Production configuration
-- **`docker-compose.test.yml`**: Testing configuration
-
-### Services Defined
-
-The Docker Compose setup includes:
-
-- **Agents**: All AI agents (self-healing, scaling, task-solving, etc.)
-- **Databases**: PostgreSQL, MongoDB, Redis
-- **Message Brokers**: RabbitMQ, Kafka
-- **Cloud Simulation**: LocalStack, MinIO
-- **Monitoring**: Prometheus, Grafana
-- **Logging**: ELK Stack
-
-### Starting Services
-
-```bash
-cd docker/docker-compose
-
-# Start all services
-docker-compose up -d
-
-# Start specific services
-docker-compose up -d postgres mongodb redis
-
-# View logs
-docker-compose logs -f self-healing-agent
-
-# Stop services
-docker-compose down
-```
-
-### Environment Variables
-
-Create a `.env` file in `/docker/docker-compose/`:
-
-```env
-# Agent Configuration
-AGENT_MODE=auto
-LOG_LEVEL=INFO
-
-# Database Configuration
-POSTGRES_PASSWORD=postgres
-MONGODB_PASSWORD=admin
-REDIS_PASSWORD=
-
-# Cloud Simulation
-LOCALSTACK_ENDPOINT=http://localhost:4566
-MINIO_ENDPOINT=http://localhost:9000
-
-# Monitoring
-PROMETHEUS_PORT=9090
-GRAFANA_PORT=3000
-```
-
-## Development Workflow
-
-### 1. Local Development
-
-```bash
-# Start all services
-cd docker/docker-compose
-docker-compose up -d
-
-# Run agent in development mode
-docker-compose up self-healing-agent
-
-# View logs
-docker-compose logs -f
-```
-
-### 2. Testing
-
-```bash
-# Run tests in containers
-docker-compose -f docker-compose.test.yml up --abort-on-container-exit
-
-# Run specific test suite
-docker-compose run --rm test-agent pytest tests/unit/
-```
-
-### 3. Debugging
-
-```bash
-# Access container shell
-docker-compose exec self-healing-agent /bin/bash
-
-# View container logs
-docker-compose logs self-healing-agent
-
-# Inspect container
-docker-compose ps
-```
-
-## Multi-Stage Builds
-
-For optimized production images, use multi-stage builds:
-
-```dockerfile
-# Build stage
-FROM python:3.9-slim as builder
-WORKDIR /app
-COPY requirements.txt .
-RUN pip install --user -r requirements.txt
-
-# Runtime stage
-FROM python:3.9-slim
-WORKDIR /app
-COPY --from=builder /root/.local /root/.local
-COPY agents/self-healing/ ./agents/self-healing/
-ENV PATH=/root/.local/bin:$PATH
-CMD ["python", "agents/self-healing/self_healing_agent.py"]
-```
-
-## Image Optimization
-
-### Best Practices
-
-1. **Use .dockerignore**: Exclude unnecessary files from build context
-2. **Layer Caching**: Order Dockerfile commands to maximize cache hits
-3. **Multi-Stage Builds**: Reduce final image size
-4. **Minimal Base Images**: Use slim or alpine variants
-5. **Combine RUN Commands**: Reduce number of layers
-
-### Example .dockerignore
-
-```
-.git
-.gitignore
-*.md
-tests/
-docs/
-.env
-*.log
-```
-
-## Container Registry
-
-### Push Images to Registry
-
-```bash
-# Tag image
-docker tag self-healing-agent:latest your-registry.com/self-healing-agent:latest
-
-# Push to registry
-docker push your-registry.com/self-healing-agent:latest
-```
-
-### Pull Images from Registry
-
-```bash
-docker pull your-registry.com/self-healing-agent:latest
-```
-
-## Health Checks
-
-Add health checks to Dockerfiles:
-
-```dockerfile
-HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-  CMD curl -f http://localhost:8080/health || exit 1
-```
-
-## Resource Limits
-
-Set resource limits in Docker Compose:
+### GitHub Actions
 
 ```yaml
-services:
-  self-healing-agent:
-    deploy:
-      resources:
-        limits:
-          cpus: '0.5'
-          memory: 512M
-        reservations:
-          cpus: '0.25'
-          memory: 256M
+- name: Build and push
+  run: |
+    export DOCKER_REGISTRY=ghcr.io
+    export IMAGE_PREFIX=${{ github.repository_owner }}/ai-cloud
+    export IMAGE_TAG=${{ github.sha }}
+    ./docker/build.sh all
 ```
 
-## Networking
-
-### Custom Networks
+### GitLab CI
 
 ```yaml
-networks:
-  agent-network:
-    driver: bridge
-```
-
-### Service Communication
-
-Services can communicate using service names:
-
-```python
-# In agent code
-postgres_host = "postgres"  # Service name in docker-compose
-mongodb_host = "mongodb"
-```
-
-## Volumes
-
-### Persistent Data
-
-```yaml
-volumes:
-  postgres_data:
-  mongodb_data:
-  redis_data:
-```
-
-### Mount Host Directories
-
-```yaml
-services:
-  agent:
-    volumes:
-      - ./agents:/app/agents
-      - ./config:/app/config
+build:
+  script:
+    - export DOCKER_REGISTRY=$CI_REGISTRY
+    - export IMAGE_PREFIX=$CI_REGISTRY_IMAGE
+    - export IMAGE_TAG=$CI_COMMIT_SHA
+    - ./docker/build.sh all
 ```
 
 ## Troubleshooting
 
-### Container Won't Start
+### Build Fails
 
-- Check logs: `docker-compose logs agent-name`
-- Verify environment variables
-- Check port conflicts
-- Verify dependencies are available
+1. Check Dockerfile syntax
+2. Verify dependencies are available
+3. Check disk space: `docker system df`
+4. Clear build cache: `docker builder prune`
 
-### Build Failures
+### Push Fails
 
-- Check Dockerfile syntax
-- Verify base image exists
-- Check network connectivity for package downloads
-- Review build context size
+1. Verify login: `docker login`
+2. Check permissions
+3. Verify registry URL
+4. Check network connectivity
 
-### Performance Issues
+### Image Too Large
 
-- Check resource limits
-- Monitor container resource usage
-- Optimize Dockerfile layers
-- Use multi-stage builds
+1. Use multi-stage builds
+2. Remove unnecessary files
+3. Use .dockerignore
+4. Use minimal base images
 
-## Related Documentation
+## Next Steps
 
-- Kubernetes deployment: `/kubernetes/README.md`
-- CI/CD pipeline: `/ci-cd/README.md`
-- Agent development: `/agents/README.md`
-
+1. **Build Images**: Build all agent images
+2. **Push to Registry**: Push to your container registry
+3. **Deploy to Kubernetes**: Use Helm charts to deploy
+4. **Monitor**: Set up monitoring for containers

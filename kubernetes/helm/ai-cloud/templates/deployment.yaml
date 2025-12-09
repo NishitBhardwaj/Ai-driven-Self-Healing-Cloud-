@@ -1,0 +1,335 @@
+{{- if .Values.selfHealing.enabled }}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ai-cloud-self-healing
+  labels:
+    app: ai-cloud
+    component: self-healing
+    chart: {{ include "ai-cloud.chart" . }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+spec:
+  replicas: {{ .Values.selfHealing.replicaCount }}
+  selector:
+    matchLabels:
+      app: ai-cloud
+      component: self-healing
+  template:
+    metadata:
+      labels:
+        app: ai-cloud
+        component: self-healing
+        chart: {{ include "ai-cloud.chart" . }}
+        release: {{ .Release.Name }}
+    spec:
+      {{- with .Values.global.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "ai-cloud.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      containers:
+      - name: self-healing
+        image: "{{ .Values.image.registry }}/{{ .Values.image.prefix }}-{{ .Values.selfHealing.image.repository }}:{{ .Values.image.tag }}"
+        imagePullPolicy: {{ .Values.image.pullPolicy }}
+        ports:
+        - name: http
+          containerPort: {{ .Values.selfHealing.service.port }}
+          protocol: TCP
+        - name: metrics
+          containerPort: {{ .Values.selfHealing.service.metricsPort }}
+          protocol: TCP
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: http
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: http
+          initialDelaySeconds: 5
+          periodSeconds: 5
+          timeoutSeconds: 3
+          failureThreshold: 3
+        resources:
+          {{- toYaml .Values.selfHealing.resources | nindent 10 }}
+        {{- if .Values.configMap.enabled }}
+        envFrom:
+        - configMapRef:
+            name: {{ include "ai-cloud.fullname" . }}-config
+        {{- end }}
+        securityContext:
+          {{- toYaml .Values.securityContext | nindent 10 }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+{{- end }}
+
+{{- if .Values.scaling.enabled }}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ai-cloud-scaling
+  labels:
+    app: ai-cloud
+    component: scaling
+    chart: {{ include "ai-cloud.chart" . }}
+    release: {{ .Release.Name }}
+spec:
+  replicas: {{ .Values.scaling.replicaCount }}
+  selector:
+    matchLabels:
+      app: ai-cloud
+      component: scaling
+  template:
+    metadata:
+      labels:
+        app: ai-cloud
+        component: scaling
+    spec:
+      serviceAccountName: {{ include "ai-cloud.serviceAccountName" . }}
+      containers:
+      - name: scaling
+        image: "{{ .Values.image.registry }}/{{ .Values.image.prefix }}-{{ .Values.scaling.image.repository }}:{{ .Values.image.tag }}"
+        imagePullPolicy: {{ .Values.image.pullPolicy }}
+        ports:
+        - name: http
+          containerPort: {{ .Values.scaling.service.port }}
+        - name: metrics
+          containerPort: {{ .Values.scaling.service.metricsPort }}
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: http
+          initialDelaySeconds: 30
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: http
+          initialDelaySeconds: 5
+        resources:
+          {{- toYaml .Values.scaling.resources | nindent 10 }}
+{{- end }}
+
+{{- if .Values.taskSolving.enabled }}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ai-cloud-task-solving
+  labels:
+    app: ai-cloud
+    component: task-solving
+spec:
+  replicas: {{ .Values.taskSolving.replicaCount }}
+  selector:
+    matchLabels:
+      app: ai-cloud
+      component: task-solving
+  template:
+    metadata:
+      labels:
+        app: ai-cloud
+        component: task-solving
+    spec:
+      containers:
+      - name: task-solving
+        image: "{{ .Values.image.registry }}/{{ .Values.image.prefix }}-{{ .Values.taskSolving.image.repository }}:{{ .Values.image.tag }}"
+        ports:
+        - name: http
+          containerPort: {{ .Values.taskSolving.service.port }}
+        - name: metrics
+          containerPort: {{ .Values.taskSolving.service.metricsPort }}
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: http
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: http
+        resources:
+          {{- toYaml .Values.taskSolving.resources | nindent 10 }}
+{{- end }}
+
+{{- if .Values.performanceMonitoring.enabled }}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ai-cloud-performance-monitoring
+  labels:
+    app: ai-cloud
+    component: performance-monitoring
+spec:
+  replicas: {{ .Values.performanceMonitoring.replicaCount }}
+  selector:
+    matchLabels:
+      app: ai-cloud
+      component: performance-monitoring
+  template:
+    metadata:
+      labels:
+        app: ai-cloud
+        component: performance-monitoring
+    spec:
+      containers:
+      - name: performance-monitoring
+        image: "{{ .Values.image.registry }}/{{ .Values.image.prefix }}-{{ .Values.performanceMonitoring.image.repository }}:{{ .Values.image.tag }}"
+        ports:
+        - name: http
+          containerPort: {{ .Values.performanceMonitoring.service.port }}
+        - name: metrics
+          containerPort: {{ .Values.performanceMonitoring.service.metricsPort }}
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: http
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: http
+        resources:
+          {{- toYaml .Values.performanceMonitoring.resources | nindent 10 }}
+{{- end }}
+
+{{- if .Values.coding.enabled }}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ai-cloud-coding
+  labels:
+    app: ai-cloud
+    component: coding
+spec:
+  replicas: {{ .Values.coding.replicaCount }}
+  selector:
+    matchLabels:
+      app: ai-cloud
+      component: coding
+  template:
+    metadata:
+      labels:
+        app: ai-cloud
+        component: coding
+    spec:
+      containers:
+      - name: coding
+        image: "{{ .Values.image.registry }}/{{ .Values.image.prefix }}-{{ .Values.coding.image.repository }}:{{ .Values.image.tag }}"
+        ports:
+        - name: http
+          containerPort: {{ .Values.coding.service.port }}
+        - name: metrics
+          containerPort: {{ .Values.coding.service.metricsPort }}
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: http
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: http
+        resources:
+          {{- toYaml .Values.coding.resources | nindent 10 }}
+{{- end }}
+
+{{- if .Values.security.enabled }}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ai-cloud-security
+  labels:
+    app: ai-cloud
+    component: security
+spec:
+  replicas: {{ .Values.security.replicaCount }}
+  selector:
+    matchLabels:
+      app: ai-cloud
+      component: security
+  template:
+    metadata:
+      labels:
+        app: ai-cloud
+        component: security
+    spec:
+      containers:
+      - name: security
+        image: "{{ .Values.image.registry }}/{{ .Values.image.prefix }}-{{ .Values.security.image.repository }}:{{ .Values.image.tag }}"
+        ports:
+        - name: http
+          containerPort: {{ .Values.security.service.port }}
+        - name: metrics
+          containerPort: {{ .Values.security.service.metricsPort }}
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: http
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: http
+        resources:
+          {{- toYaml .Values.security.resources | nindent 10 }}
+{{- end }}
+
+{{- if .Values.optimization.enabled }}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ai-cloud-optimization
+  labels:
+    app: ai-cloud
+    component: optimization
+spec:
+  replicas: {{ .Values.optimization.replicaCount }}
+  selector:
+    matchLabels:
+      app: ai-cloud
+      component: optimization
+  template:
+    metadata:
+      labels:
+        app: ai-cloud
+        component: optimization
+    spec:
+      containers:
+      - name: optimization
+        image: "{{ .Values.image.registry }}/{{ .Values.image.prefix }}-{{ .Values.optimization.image.repository }}:{{ .Values.image.tag }}"
+        ports:
+        - name: http
+          containerPort: {{ .Values.optimization.service.port }}
+        - name: metrics
+          containerPort: {{ .Values.optimization.service.metricsPort }}
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: http
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: http
+        resources:
+          {{- toYaml .Values.optimization.resources | nindent 10 }}
+{{- end }}
+

@@ -129,7 +129,7 @@ collection = db['agent_events']
 collection.insert_one({
     'agent_id': 'self-healing',
     'event_type': 'failure_detected',
-    'timestamp': '2024-12-07T01:00:00Z'
+    'timestamp': 'YYYY-MM-DDTHH:MM:SSZ'
 })
 
 # Query documents

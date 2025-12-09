@@ -235,7 +235,7 @@ Confidence levels are logged with:
 
 - **Pattern**: `agent-logs-*`
 - **Time Field**: `@timestamp`
-- **Format**: Daily indices (agent-logs-2024.01.01)
+- **Format**: Daily indices (agent-logs-YYYY.MM.DD)
 
 ### Creating Index Pattern in Kibana
 

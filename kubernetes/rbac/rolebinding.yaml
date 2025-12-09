@@ -1,0 +1,45 @@
+# RoleBinding for Agents
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: ai-cloud-agents-binding
+  namespace: ai-cloud-production
+subjects:
+- kind: ServiceAccount
+  name: ai-cloud-agents
+  namespace: ai-cloud-production
+roleRef:
+  kind: Role
+  name: ai-cloud-agents-role
+  apiGroup: rbac.authorization.k8s.io
+---
+# RoleBinding for Monitoring
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: ai-cloud-monitoring-binding
+  namespace: ai-cloud-production
+subjects:
+- kind: ServiceAccount
+  name: ai-cloud-monitoring
+  namespace: ai-cloud-production
+roleRef:
+  kind: Role
+  name: ai-cloud-monitoring-role
+  apiGroup: rbac.authorization.k8s.io
+---
+# RoleBinding for CI/CD
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: ai-cloud-cicd-binding
+  namespace: ai-cloud-production
+subjects:
+- kind: ServiceAccount
+  name: ai-cloud-cicd
+  namespace: ai-cloud-production
+roleRef:
+  kind: Role
+  name: ai-cloud-cicd-role
+  apiGroup: rbac.authorization.k8s.io
+

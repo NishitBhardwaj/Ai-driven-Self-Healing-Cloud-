@@ -1,0 +1,123 @@
+{{- if and .Values.monitoring.enabled .Values.monitoring.serviceMonitor.enabled }}
+{{- if .Values.selfHealing.enabled }}
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: ai-cloud-self-healing
+  labels:
+    app: ai-cloud
+    component: self-healing
+spec:
+  selector:
+    matchLabels:
+      app: ai-cloud
+      component: self-healing
+  endpoints:
+  - port: metrics
+    interval: {{ .Values.monitoring.serviceMonitor.interval }}
+    scrapeTimeout: {{ .Values.monitoring.serviceMonitor.scrapeTimeout }}
+    path: /metrics
+{{- end }}
+
+{{- if .Values.scaling.enabled }}
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: ai-cloud-scaling
+  labels:
+    app: ai-cloud
+    component: scaling
+spec:
+  selector:
+    matchLabels:
+      app: ai-cloud
+      component: scaling
+  endpoints:
+  - port: metrics
+    interval: {{ .Values.monitoring.serviceMonitor.interval }}
+    path: /metrics
+{{- end }}
+
+{{- if .Values.taskSolving.enabled }}
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: ai-cloud-task-solving
+spec:
+  selector:
+    matchLabels:
+      app: ai-cloud
+      component: task-solving
+  endpoints:
+  - port: metrics
+    path: /metrics
+{{- end }}
+
+{{- if .Values.performanceMonitoring.enabled }}
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: ai-cloud-performance-monitoring
+spec:
+  selector:
+    matchLabels:
+      app: ai-cloud
+      component: performance-monitoring
+  endpoints:
+  - port: metrics
+    path: /metrics
+{{- end }}
+
+{{- if .Values.coding.enabled }}
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: ai-cloud-coding
+spec:
+  selector:
+    matchLabels:
+      app: ai-cloud
+      component: coding
+  endpoints:
+  - port: metrics
+    path: /metrics
+{{- end }}
+
+{{- if .Values.security.enabled }}
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: ai-cloud-security
+spec:
+  selector:
+    matchLabels:
+      app: ai-cloud
+      component: security
+  endpoints:
+  - port: metrics
+    path: /metrics
+{{- end }}
+
+{{- if .Values.optimization.enabled }}
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: ai-cloud-optimization
+spec:
+  selector:
+    matchLabels:
+      app: ai-cloud
+      component: optimization
+  endpoints:
+  - port: metrics
+    path: /metrics
+{{- end }}
+{{- end }}
+

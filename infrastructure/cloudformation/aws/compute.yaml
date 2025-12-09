@@ -1,0 +1,183 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: 'EC2 Auto Scaling Group for AI-Driven Self-Healing Cloud Agents'
+
+Parameters:
+  ProjectName:
+    Type: String
+    Default: ai-self-healing-cloud
+  
+  Environment:
+    Type: String
+    Default: production
+  
+  VPCId:
+    Type: AWS::EC2::VPC::Id
+    Description: VPC ID from VPC stack
+  
+  PrivateSubnet1Id:
+    Type: AWS::EC2::Subnet::Id
+    Description: Private Subnet 1 ID
+  
+  PrivateSubnet2Id:
+    Type: AWS::EC2::Subnet::Id
+    Description: Private Subnet 2 ID
+  
+  AgentInstanceType:
+    Type: String
+    Default: t3.medium
+  
+  MinInstances:
+    Type: Number
+    Default: 2
+  
+  MaxInstances:
+    Type: Number
+    Default: 10
+  
+  DesiredInstances:
+    Type: Number
+    Default: 3
+  
+  KeyPairName:
+    Type: AWS::EC2::KeyPair::KeyName
+    Description: EC2 Key Pair name
+
+Resources:
+  # Security Group
+  AgentSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Security group for agent instances
+      VpcId: !Ref VPCId
+      SecurityGroupIngress:
+      - IpProtocol: tcp
+        FromPort: 8080
+        ToPort: 8087
+        CidrIp: !GetAtt VPCId.CidrBlock
+      - IpProtocol: tcp
+        FromPort: 22
+        ToPort: 22
+        CidrIp: 0.0.0.0/0
+      SecurityGroupEgress:
+      - IpProtocol: -1
+        CidrIp: 0.0.0.0/0
+      Tags:
+      - Key: Name
+        Value: !Sub '${ProjectName}-agents-sg'
+
+  # Launch Template
+  AgentLaunchTemplate:
+    Type: AWS::EC2::LaunchTemplate
+    Properties:
+      LaunchTemplateName: !Sub '${ProjectName}-agent-template'
+      LaunchTemplateData:
+        ImageId: ami-0c55b159cbfafe1f0  # Amazon Linux 2
+        InstanceType: !Ref AgentInstanceType
+        KeyName: !Ref KeyPairName
+        SecurityGroupIds:
+        - !Ref AgentSecurityGroup
+        UserData:
+          Fn::Base64: !Sub |
+            #!/bin/bash
+            yum update -y
+            yum install -y docker
+            systemctl start docker
+            systemctl enable docker
+        TagSpecifications:
+        - ResourceType: instance
+          Tags:
+          - Key: Name
+            Value: !Sub '${ProjectName}-agent'
+          - Key: Environment
+            Value: !Ref Environment
+
+  # Auto Scaling Group
+  AgentAutoScalingGroup:
+    Type: AWS::AutoScaling::AutoScalingGroup
+    Properties:
+      AutoScalingGroupName: !Sub '${ProjectName}-agents-asg'
+      VPCZoneIdentifier:
+      - !Ref PrivateSubnet1Id
+      - !Ref PrivateSubnet2Id
+      LaunchTemplate:
+        LaunchTemplateId: !Ref AgentLaunchTemplate
+        Version: !GetAtt AgentLaunchTemplate.LatestVersionNumber
+      MinSize: !Ref MinInstances
+      MaxSize: !Ref MaxInstances
+      DesiredCapacity: !Ref DesiredInstances
+      HealthCheckType: EC2
+      HealthCheckGracePeriod: 300
+      Tags:
+      - Key: Name
+        Value: !Sub '${ProjectName}-agent'
+        PropagateAtLaunch: true
+
+  # Auto Scaling Policy - Scale Up
+  ScaleUpPolicy:
+    Type: AWS::AutoScaling::ScalingPolicy
+    Properties:
+      AdjustmentType: ChangeInCapacity
+      AutoScalingGroupName: !Ref AgentAutoScalingGroup
+      Cooldown: 300
+      ScalingAdjustment: 1
+
+  # Auto Scaling Policy - Scale Down
+  ScaleDownPolicy:
+    Type: AWS::AutoScaling::ScalingPolicy
+    Properties:
+      AdjustmentType: ChangeInCapacity
+      AutoScalingGroupName: !Ref AgentAutoScalingGroup
+      Cooldown: 300
+      ScalingAdjustment: -1
+
+  # CloudWatch Alarm - CPU High
+  CPUHighAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: !Sub '${ProjectName}-agents-cpu-high'
+      AlarmDescription: Alert when CPU exceeds 80%
+      MetricName: CPUUtilization
+      Namespace: AWS/EC2
+      Statistic: Average
+      Period: 300
+      EvaluationPeriods: 2
+      Threshold: 80
+      ComparisonOperator: GreaterThanThreshold
+      AlarmActions:
+      - !Ref ScaleUpPolicy
+      Dimensions:
+      - Name: AutoScalingGroupName
+        Value: !Ref AgentAutoScalingGroup
+
+  # CloudWatch Alarm - CPU Low
+  CPULowAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: !Sub '${ProjectName}-agents-cpu-low'
+      AlarmDescription: Alert when CPU below 20%
+      MetricName: CPUUtilization
+      Namespace: AWS/EC2
+      Statistic: Average
+      Period: 300
+      EvaluationPeriods: 2
+      Threshold: 20
+      ComparisonOperator: LessThanThreshold
+      AlarmActions:
+      - !Ref ScaleDownPolicy
+      Dimensions:
+      - Name: AutoScalingGroupName
+        Value: !Ref AgentAutoScalingGroup
+
+Outputs:
+  AutoScalingGroupName:
+    Description: Auto Scaling Group name
+    Value: !Ref AgentAutoScalingGroup
+    Export:
+      Name: !Sub '${AWS::StackName}-AutoScalingGroupName'
+
+  SecurityGroupId:
+    Description: Security Group ID
+    Value: !Ref AgentSecurityGroup
+    Export:
+      Name: !Sub '${AWS::StackName}-SecurityGroupId'
+

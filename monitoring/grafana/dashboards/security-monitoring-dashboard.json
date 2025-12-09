@@ -1,0 +1,119 @@
+{
+  "dashboard": {
+    "title": "Security Monitoring Dashboard",
+    "tags": ["security", "monitoring", "agents"],
+    "timezone": "browser",
+    "schemaVersion": 27,
+    "version": 1,
+    "refresh": "10s",
+    "panels": [
+      {
+        "id": 1,
+        "title": "Intrusion Alerts",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "increase(intrusion_alerts_total[5m])",
+            "legendFormat": "Intrusions"
+          }
+        ],
+        "gridPos": {"h": 4, "w": 6, "x": 0, "y": 0},
+        "fieldConfig": {
+          "defaults": {
+            "color": {"mode": "thresholds"},
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {"value": 0, "color": "green"},
+                {"value": 1, "color": "yellow"},
+                {"value": 5, "color": "red"}
+              ]
+            }
+          }
+        }
+      },
+      {
+        "id": 2,
+        "title": "Blocked Attacks",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "increase(blocked_attacks_total[5m])",
+            "legendFormat": "Blocked"
+          }
+        ],
+        "gridPos": {"h": 4, "w": 6, "x": 6, "y": 0},
+        "fieldConfig": {
+          "defaults": {
+            "color": {"mode": "thresholds"},
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {"value": 0, "color": "green"},
+                {"value": 10, "color": "yellow"},
+                {"value": 50, "color": "red"}
+              ]
+            }
+          }
+        }
+      },
+      {
+        "id": 3,
+        "title": "Security Events Over Time",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "rate(intrusion_alerts_total[5m])",
+            "legendFormat": "Intrusion Alerts"
+          },
+          {
+            "expr": "rate(blocked_attacks_total[5m])",
+            "legendFormat": "Blocked Attacks"
+          }
+        ],
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 4},
+        "yaxes": [
+          {"format": "short", "label": "Events/sec"},
+          {"format": "short"}
+        ]
+      },
+      {
+        "id": 4,
+        "title": "Security Agent Health",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "up{job=\"security-agent\"}",
+            "legendFormat": "Status"
+          }
+        ],
+        "gridPos": {"h": 4, "w": 6, "x": 12, "y": 0},
+        "fieldConfig": {
+          "defaults": {
+            "color": {"mode": "thresholds"},
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {"value": 0, "color": "red"},
+                {"value": 1, "color": "green"}
+              ]
+            }
+          }
+        }
+      },
+      {
+        "id": 5,
+        "title": "Top Attack Sources",
+        "type": "table",
+        "targets": [
+          {
+            "expr": "topk(10, sum by (source_ip) (increase(blocked_attacks_total[1h])))",
+            "legendFormat": "{{source_ip}}"
+          }
+        ],
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 4}
+      }
+    ]
+  }
+}
+

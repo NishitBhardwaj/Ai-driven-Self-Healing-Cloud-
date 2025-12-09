@@ -1,0 +1,15 @@
+# ClusterRoleBinding for Cluster Monitoring
+# Only bind if cluster-wide monitoring is needed
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: ai-cloud-cluster-monitoring-binding
+subjects:
+- kind: ServiceAccount
+  name: ai-cloud-monitoring
+  namespace: ai-cloud-production
+roleRef:
+  kind: ClusterRole
+  name: ai-cloud-cluster-monitoring
+  apiGroup: rbac.authorization.k8s.io
+

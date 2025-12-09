@@ -1,0 +1,91 @@
+# ServiceMonitor for Prometheus to scrape agent metrics
+# This enables Prometheus to automatically discover and scrape agent metrics
+
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: ai-cloud-agents
+  namespace: ai-cloud-production
+  labels:
+    app: ai-cloud
+    release: prometheus
+spec:
+  selector:
+    matchLabels:
+      app: ai-cloud
+  endpoints:
+  # Self-Healing Agent
+  - port: metrics
+    path: /metrics
+    interval: 10s
+    relabelings:
+    - sourceLabels: [__meta_kubernetes_pod_label_component]
+      targetLabel: agent
+      regex: (.*)
+  # Scaling Agent
+  - port: metrics
+    path: /metrics
+    interval: 10s
+    relabelings:
+    - sourceLabels: [__meta_kubernetes_pod_label_component]
+      targetLabel: agent
+      regex: (.*)
+  # Task-Solving Agent
+  - port: metrics
+    path: /metrics
+    interval: 10s
+    relabelings:
+    - sourceLabels: [__meta_kubernetes_pod_label_component]
+      targetLabel: agent
+      regex: (.*)
+  # Performance Monitoring Agent
+  - port: metrics
+    path: /metrics
+    interval: 10s
+    relabelings:
+    - sourceLabels: [__meta_kubernetes_pod_label_component]
+      targetLabel: agent
+      regex: (.*)
+  # Coding Agent
+  - port: metrics
+    path: /metrics
+    interval: 10s
+    relabelings:
+    - sourceLabels: [__meta_kubernetes_pod_label_component]
+      targetLabel: agent
+      regex: (.*)
+  # Security Agent
+  - port: metrics
+    path: /metrics
+    interval: 10s
+    relabelings:
+    - sourceLabels: [__meta_kubernetes_pod_label_component]
+      targetLabel: agent
+      regex: (.*)
+  # Optimization Agent
+  - port: metrics
+    path: /metrics
+    interval: 10s
+    relabelings:
+    - sourceLabels: [__meta_kubernetes_pod_label_component]
+      targetLabel: agent
+      regex: (.*)
+---
+# ServiceMonitor for Node Exporter
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: node-exporter
+  namespace: monitoring
+  labels:
+    app: node-exporter
+    release: prometheus
+spec:
+  selector:
+    matchLabels:
+      app: node-exporter
+  endpoints:
+  - port: metrics
+    path: /metrics
+    interval: 15s
+

@@ -1,0 +1,67 @@
+# Internal Ingress for Service-to-Service Communication
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: ai-cloud-ingress-internal
+  namespace: ai-cloud-production
+  annotations:
+    kubernetes.io/ingress.class: "nginx-internal"
+    nginx.ingress.kubernetes.io/ssl-redirect: "false"
+    nginx.ingress.kubernetes.io/backend-protocol: "HTTP"
+spec:
+  ingressClassName: nginx-internal
+  rules:
+  - host: internal.ai-cloud.svc.cluster.local
+    http:
+      paths:
+      # Internal API endpoints
+      - path: /internal/api/self-healing
+        pathType: Prefix
+        backend:
+          service:
+            name: ai-cloud-self-healing
+            port:
+              number: 8080
+      - path: /internal/api/scaling
+        pathType: Prefix
+        backend:
+          service:
+            name: ai-cloud-scaling
+            port:
+              number: 8080
+      - path: /internal/api/task-solving
+        pathType: Prefix
+        backend:
+          service:
+            name: ai-cloud-task-solving
+            port:
+              number: 8080
+      - path: /internal/api/performance-monitoring
+        pathType: Prefix
+        backend:
+          service:
+            name: ai-cloud-performance-monitoring
+            port:
+              number: 8080
+      - path: /internal/api/coding
+        pathType: Prefix
+        backend:
+          service:
+            name: ai-cloud-coding
+            port:
+              number: 8080
+      - path: /internal/api/security
+        pathType: Prefix
+        backend:
+          service:
+            name: ai-cloud-security
+            port:
+              number: 8080
+      - path: /internal/api/optimization
+        pathType: Prefix
+        backend:
+          service:
+            name: ai-cloud-optimization
+            port:
+              number: 8080
+
