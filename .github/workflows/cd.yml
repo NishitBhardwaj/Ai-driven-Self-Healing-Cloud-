@@ -128,6 +128,12 @@ jobs:
 
       - name: Configure kubectl for EKS
         run: |
+          if [ -z "${{ secrets.EKS_CLUSTER_NAME }}" ] || [ "${{ secrets.EKS_CLUSTER_NAME }}" = "Your EKS cluster name (e.g., )" ]; then
+            echo "❌ ERROR: EKS_CLUSTER_NAME secret is not set or contains placeholder text!"
+            echo "Please set the EKS_CLUSTER_NAME secret in GitHub Settings → Secrets → Actions"
+            exit 1
+          fi
+          echo "Configuring kubectl for EKS cluster: ${{ secrets.EKS_CLUSTER_NAME }}"
           aws eks update-kubeconfig --name "${{ secrets.EKS_CLUSTER_NAME }}" --region "${{ env.AWS_REGION }}"
 
       - name: Rollback Helm release

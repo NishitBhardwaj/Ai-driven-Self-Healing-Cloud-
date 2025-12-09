@@ -1,0 +1,9 @@
+# Prevent accidental commit of sensitive files
+*.csv filter=git-crypt diff=git-crypt
+*accessKeys* filter=git-crypt diff=git-crypt
+*credentials* filter=git-crypt diff=git-crypt
+*secret* filter=git-crypt diff=git-crypt
+
+# Mark CSV files as binary to prevent diff
+*.csv -text
+
