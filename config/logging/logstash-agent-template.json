@@ -1,0 +1,103 @@
+{
+  "index_patterns": ["agent-logs-*"],
+  "settings": {
+    "number_of_shards": 1,
+    "number_of_replicas": 0,
+    "index": {
+      "refresh_interval": "5s"
+    }
+  },
+  "mappings": {
+    "properties": {
+      "@timestamp": {
+        "type": "date"
+      },
+      "agent_id": {
+        "type": "keyword"
+      },
+      "agent_name": {
+        "type": "keyword"
+      },
+      "action": {
+        "type": "keyword"
+      },
+      "action_taken": {
+        "type": "text"
+      },
+      "explanation": {
+        "type": "text"
+      },
+      "reasoning": {
+        "type": "text"
+      },
+      "reasoning_chain": {
+        "type": "nested",
+        "properties": {
+          "step_number": {
+            "type": "integer"
+          },
+          "description": {
+            "type": "text"
+          },
+          "reasoning": {
+            "type": "text"
+          }
+        }
+      },
+      "confidence": {
+        "type": "float"
+      },
+      "confidence_level": {
+        "type": "float"
+      },
+      "mode": {
+        "type": "keyword"
+      },
+      "decision_mode": {
+        "type": "keyword"
+      },
+      "error": {
+        "type": "text"
+      },
+      "error_type": {
+        "type": "keyword"
+      },
+      "log_type": {
+        "type": "keyword"
+      },
+      "message": {
+        "type": "text"
+      },
+      "level": {
+        "type": "keyword"
+      },
+      "service_id": {
+        "type": "keyword"
+      },
+      "failure_type": {
+        "type": "keyword"
+      },
+      "status": {
+        "type": "keyword"
+      },
+      "success": {
+        "type": "boolean"
+      },
+      "hostname": {
+        "type": "keyword"
+      },
+      "environment": {
+        "type": "keyword"
+      },
+      "metadata": {
+        "type": "object",
+        "enabled": true
+      },
+      "context": {
+        "type": "object",
+        "enabled": true
+      }
+    }
+  }
+}
+

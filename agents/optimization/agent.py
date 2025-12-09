@@ -9,6 +9,7 @@ import json
 import logging
 from typing import Dict, Any, Optional
 from optimizer import CostOptimizer
+from elk_logging import get_elk_logger
 
 
 class OptimizationAgent:
@@ -77,6 +78,14 @@ class OptimizationAgent:
             Dict with optimization recommendations and potential savings
         """
         self.logger.info("Optimizing costs")
+        
+        # Log action trigger to ELK
+        elk_logger = get_elk_logger()
+        elk_logger.log_action_trigger("optimize_cost", {
+            "instances_count": len(infrastructure_data.get("instances", [])),
+            "total_cost": current_costs.get("total", 0.0)
+        }, None)
+        
         return self.optimizer.optimize_cost(infrastructure_data, current_costs)
     
     def recommend_architecture(

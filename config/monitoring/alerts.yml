@@ -1,0 +1,144 @@
+# Prometheus Alerting Rules for Agent Monitoring
+
+groups:
+  - name: agent_health
+    interval: 30s
+    rules:
+      # Agent Down Alert
+      - alert: AgentDown
+        expr: up{job=~".*-agent"} == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Agent {{ $labels.job }} is down"
+          description: "Agent {{ $labels.job }} has been down for more than 1 minute."
+
+      # Agent High Error Rate
+      - alert: AgentHighErrorRate
+        expr: rate(agent_errors_total[5m]) > 0.1
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High error rate for {{ $labels.agent }}"
+          description: "Agent {{ $labels.agent }} has error rate of {{ $value }} errors/second."
+
+  - name: self_healing_agent
+    interval: 30s
+    rules:
+      # Self-Healing Agent High Failure Rate
+      - alert: SelfHealingHighFailureRate
+        expr: rate(heal_failures_total[5m]) > 0.05
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Self-Healing Agent has high failure rate"
+          description: "Self-Healing Agent failure rate is {{ $value }} failures/second."
+
+      # Self-Healing Agent Low Success Rate
+      - alert: SelfHealingLowSuccessRate
+        expr: heal_success_rate < 0.8
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Self-Healing Agent has low success rate"
+          description: "Self-Healing Agent success rate is {{ $value }} (below 80%)."
+
+  - name: scaling_agent
+    interval: 30s
+    rules:
+      # Scaling Agent Excessive Scaling
+      - alert: ScalingAgentExcessiveScaling
+        expr: rate(scaling_actions_total[5m]) > 2
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Scaling Agent is scaling too frequently"
+          description: "Scaling Agent is performing {{ $value }} scaling actions per second."
+
+  - name: task_solving_agent
+    interval: 30s
+    rules:
+      # Task-Solving Agent High Failure Rate
+      - alert: TaskSolvingHighFailureRate
+        expr: rate(task_failures_total[5m]) > 0.1
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Task-Solving Agent has high failure rate"
+          description: "Task-Solving Agent failure rate is {{ $value }} failures/second."
+
+  - name: security_agent
+    interval: 30s
+    rules:
+      # Security Agent Intrusion Detected
+      - alert: SecurityIntrusionDetected
+        expr: increase(intrusion_alerts_total[5m]) > 0
+        for: 0m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Security intrusion detected"
+          description: "Security Agent detected {{ $value }} intrusion(s) in the last 5 minutes."
+
+  - name: performance_monitoring
+    interval: 30s
+    rules:
+      # High CPU Usage
+      - alert: HighCPUUsage
+        expr: cpu_usage_percent > 90
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High CPU usage detected"
+          description: "CPU usage is {{ $value }}% (above 90%)."
+
+      # High Memory Usage
+      - alert: HighMemoryUsage
+        expr: memory_usage_percent > 90
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High memory usage detected"
+          description: "Memory usage is {{ $value }}% (above 90%)."
+
+      # High Anomaly Detection Rate
+      - alert: HighAnomalyDetectionRate
+        expr: rate(anomalies_detected_total[5m]) > 1
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High anomaly detection rate"
+          description: "Anomaly detection rate is {{ $value }} anomalies/second."
+
+  - name: system_resources
+    interval: 30s
+    rules:
+      # System High Load
+      - alert: SystemHighLoad
+        expr: node_load1 > 4
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "System high load"
+          description: "System load is {{ $value }} (above 4)."
+
+      # Disk Space Low
+      - alert: DiskSpaceLow
+        expr: (node_filesystem_avail_bytes / node_filesystem_size_bytes) < 0.1
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Disk space is low"
+          description: "Disk space available is {{ $value | humanizePercentage }}."
+

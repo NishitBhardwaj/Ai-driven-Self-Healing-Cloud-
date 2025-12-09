@@ -12,7 +12,9 @@ import (
 	"time"
 
 	"github.com/ai-driven-self-healing-cloud/agents/core"
+	"github.com/ai-driven-self-healing-cloud/api"
 	"github.com/ai-driven-self-healing-cloud/config"
+	"github.com/gorilla/mux"
 	"github.com/sirupsen/logrus"
 )
 
@@ -77,7 +79,16 @@ func main() {
 	logger.WithField("component", "boot").Info("[BOOT] Agent registry initialized")
 	logger.WithField("registered_agents", registry.GetAgentCount()).Info("[BOOT] Registered agents: 0")
 
-	// Step 6: Test LLM connectivity
+	// Step 6: Setup API routes
+	logger.WithField("component", "boot").Info("[BOOT] Setting up API routes...")
+	apiRouter := setupAPIRoutes(registry, logger)
+	logger.WithField("component", "boot").Info("[BOOT] API routes initialized")
+
+	// Step 7: Start HTTP server
+	logger.WithField("component", "boot").Info("[BOOT] Starting HTTP server...")
+	go startHTTPServer(apiRouter, logger)
+
+	// Step 8: Test LLM connectivity
 	logger.WithField("component", "boot").Info("[BOOT] Testing LLM connectivity...")
 	if err := testLLMConnectivity(cfg, logger); err != nil {
 		logger.WithError(err).Warn("[BOOT] LLM connectivity test failed (system will continue)")

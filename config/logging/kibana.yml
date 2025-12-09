@@ -1,0 +1,41 @@
+# Kibana Configuration for Log Visualization
+# This configuration is used when running Kibana in Docker or as a service
+
+server.name: kibana
+server.host: "0.0.0.0"
+server.port: 5601
+
+# Elasticsearch connection
+elasticsearch.hosts: ["http://elasticsearch:9200"]
+elasticsearch.username: ""
+elasticsearch.password: ""
+
+# Index patterns
+kibana.defaultAppId: "discover"
+
+# Logging
+logging.appenders:
+  file:
+    type: file
+    fileName: /var/log/kibana/kibana.log
+    layout:
+      type: json
+
+logging.root:
+  appenders:
+    - default
+    - file
+
+# Monitoring
+monitoring.ui.container.elasticsearch.enabled: true
+
+# Security (for development)
+xpack.security.enabled: false
+xpack.encryptedSavedObjects.encryptionKey: "minimal-32-character-secret-key-here"
+
+# Saved objects
+savedObjects.maxImportPayloadBytes: 26214400
+
+# Timezone
+dateFormat: "YYYY-MM-DD HH:mm:ss"
+

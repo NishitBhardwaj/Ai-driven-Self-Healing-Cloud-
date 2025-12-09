@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Agent Decision Interface</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <h1>🤖 AI Agent Decision Interface</h1>
+            <p class="subtitle">Real-time decision monitoring and approval</p>
+        </header>
+
+        <!-- Auto Mode Display -->
+        <div id="auto-mode-container" class="decision-container auto-mode hidden">
+            <div class="mode-badge auto-badge">
+                <span class="badge-icon">⚡</span>
+                <span>Auto Mode</span>
+            </div>
+            
+            <div class="status-card executed">
+                <div class="status-icon">
+                    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                        <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                    </svg>
+                </div>
+                <h2 class="status-title">Action Has Been Automatically Executed</h2>
+                <p class="status-message" id="auto-status-message">The system has automatically resolved the issue.</p>
+            </div>
+
+            <div class="reasoning-card">
+                <h3 class="card-title">
+                    <span class="icon">💡</span>
+                    Reasoning & Explanation
+                </h3>
+                <div class="reasoning-content" id="auto-reasoning">
+                    <p class="reasoning-text">Loading reasoning...</p>
+                </div>
+            </div>
+
+            <div class="details-card">
+                <h3 class="card-title">
+                    <span class="icon">📊</span>
+                    Decision Details
+                </h3>
+                <div class="details-grid" id="auto-details">
+                    <!-- Details will be populated by JavaScript -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Manual Mode Display -->
+        <div id="manual-mode-container" class="decision-container manual-mode hidden">
+            <div class="mode-badge manual-badge">
+                <span class="badge-icon">👤</span>
+                <span>Manual Mode - Approval Required</span>
+            </div>
+
+            <div class="error-card">
+                <div class="error-header">
+                    <span class="error-icon">⚠️</span>
+                    <h2 class="error-title" id="manual-error-title">Issue Detected</h2>
+                </div>
+                <p class="error-description" id="manual-error-description">
+                    An issue has been detected that requires your approval.
+                </p>
+            </div>
+
+            <div class="reasoning-card">
+                <h3 class="card-title">
+                    <span class="icon">🔍</span>
+                    Analysis & Reasoning
+                </h3>
+                <div class="reasoning-content" id="manual-reasoning">
+                    <p class="reasoning-text">Loading analysis...</p>
+                </div>
+            </div>
+
+            <div class="actions-card">
+                <h3 class="card-title">
+                    <span class="icon">🎯</span>
+                    Available Actions
+                </h3>
+                <p class="actions-subtitle">Please review the options below and select an action:</p>
+                <div class="actions-list" id="manual-actions-list">
+                    <!-- Action options will be populated by JavaScript -->
+                </div>
+            </div>
+
+            <div class="confirmation-section">
+                <button id="confirm-button" class="confirm-button" disabled>
+                    <span class="button-icon">✓</span>
+                    <span>Confirm Selection</span>
+                </button>
+                <p class="confirmation-hint">Select an action above to enable confirmation</p>
+            </div>
+        </div>
+
+        <!-- Loading State -->
+        <div id="loading-container" class="loading-container">
+            <div class="spinner"></div>
+            <p>Loading decision...</p>
+        </div>
+
+        <!-- Error State -->
+        <div id="error-container" class="error-container hidden">
+            <div class="error-message">
+                <span class="error-icon-large">❌</span>
+                <h2>Error Loading Decision</h2>
+                <p id="error-message-text">An error occurred while loading the decision.</p>
+                <button class="retry-button" onclick="loadDecision()">Retry</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="decision-api.js"></script>
+    <script src="decision-ui.js"></script>
+</body>
+</html>
+

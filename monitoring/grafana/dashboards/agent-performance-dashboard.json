@@ -1,0 +1,101 @@
+{
+  "dashboard": {
+    "title": "Agent Performance Dashboard",
+    "tags": ["agents", "performance"],
+    "timezone": "browser",
+    "schemaVersion": 16,
+    "version": 1,
+    "refresh": "10s",
+    "panels": [
+      {
+        "id": 1,
+        "title": "Agent Request Rate",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "rate(agent_requests_total[5m])",
+            "legendFormat": "{{agent}} - {{status}}"
+          }
+        ],
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 0}
+      },
+      {
+        "id": 2,
+        "title": "Agent Latency",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "histogram_quantile(0.95, rate(agent_latency_seconds_bucket[5m]))",
+            "legendFormat": "P95 - {{agent}}"
+          },
+          {
+            "expr": "histogram_quantile(0.99, rate(agent_latency_seconds_bucket[5m]))",
+            "legendFormat": "P99 - {{agent}}"
+          }
+        ],
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 0}
+      },
+      {
+        "id": 3,
+        "title": "Agent Uptime",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "agent_uptime_seconds",
+            "legendFormat": "{{agent}}"
+          }
+        ],
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 8}
+      },
+      {
+        "id": 4,
+        "title": "Active Tasks",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "agent_active_tasks",
+            "legendFormat": "{{agent}}"
+          }
+        ],
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 8}
+      },
+      {
+        "id": 5,
+        "title": "Self-Healing Success Rate",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "heal_success_rate",
+            "legendFormat": "Success Rate"
+          }
+        ],
+        "gridPos": {"h": 4, "w": 6, "x": 0, "y": 16}
+      },
+      {
+        "id": 6,
+        "title": "Scaling Actions",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "rate(scaling_actions_total[5m])",
+            "legendFormat": "{{direction}} - {{service}}"
+          }
+        ],
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 20}
+      },
+      {
+        "id": 7,
+        "title": "Tasks Completed",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "rate(tasks_completed_total[5m])",
+            "legendFormat": "Completed"
+          }
+        ],
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 20}
+      }
+    ]
+  }
+}
+

@@ -88,8 +88,39 @@ func (a *PerformanceMonitoringAgent) handleMetricsEvent(data []byte) {
 	// Analyze metrics
 }
 
-// ExplainAction provides explanation for monitoring actions
+// ExplainAction provides human-readable explanation for monitoring actions
 func (a *PerformanceMonitoringAgent) ExplainAction(input interface{}, output interface{}) string {
-	return fmt.Sprintf("Performance Monitoring Agent: Collected metrics from Prometheus (input=%v), analyzed patterns for anomalies. Results: %v. Detected threshold violations and identified performance bottlenecks and resource constraints based on historical baselines.", input, output)
+	var problem, action, reason string
+	
+	// Parse output to extract findings
+	if outputMap, ok := output.(map[string]interface{}); ok {
+		if anomalies, ok := outputMap["anomalies"].([]interface{}); ok && len(anomalies) > 0 {
+			problem = fmt.Sprintf("%d anomaly(ies) in system metrics", len(anomalies))
+		}
+		if thresholdViolations, ok := outputMap["threshold_violations"].([]interface{}); ok && len(thresholdViolations) > 0 {
+			if problem != "" {
+				problem += fmt.Sprintf(" and %d threshold violation(s)", len(thresholdViolations))
+			} else {
+				problem = fmt.Sprintf("%d threshold violation(s)", len(thresholdViolations))
+			}
+		}
+		if actionTaken, ok := outputMap["action"].(string); ok {
+			action = actionTaken
+		}
+	}
+	
+	// Default values
+	if problem == "" {
+		problem = "system metrics were collected and analyzed"
+	}
+	if action == "" {
+		action = "analyzed the metrics"
+	}
+	reason = "to identify performance bottlenecks and ensure system health"
+	
+	// Format explanation
+	explanation := fmt.Sprintf("The agent detected that %s and %s %s.", problem, action, reason)
+	
+	return explanation
 }
 

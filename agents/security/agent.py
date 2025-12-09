@@ -10,6 +10,7 @@ import logging
 from typing import Dict, Any, Optional, List
 from detect import SecurityDetector
 from ai_integration import SecurityAIIntegration
+from elk_logging import get_elk_logger
 
 
 class SecurityAgent:
@@ -86,6 +87,14 @@ class SecurityAgent:
             Dict with detected threats and severity
         """
         self.logger.info("Detecting intrusions using AI Engine")
+        
+        # Log action trigger to ELK
+        elk_logger = get_elk_logger()
+        elk_logger.log_action_trigger("detect_intrusion", {
+            "logs_count": len(logs),
+            "has_network_traffic": network_traffic is not None,
+            "has_dependency_graph": dependency_graph_data is not None
+        }, None)
         
         try:
             # Use AI Engine Integration

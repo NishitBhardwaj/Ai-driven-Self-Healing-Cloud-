@@ -43,6 +43,7 @@ type HealingResult struct {
 
 // Heal performs healing action on a service
 func (h *Healer) Heal(request *HealingRequest) (*HealingResult, error) {
+	startTime := time.Now()
 	h.logger.WithField("service_id", request.ServiceID).Info("Initiating healing process")
 
 	// Determine healing strategy based on failure type
@@ -56,8 +57,36 @@ func (h *Healer) Heal(request *HealingRequest) (*HealingResult, error) {
 		Reasoning: fmt.Sprintf("Applied %s strategy for %s failure", action, request.FailureType),
 	}
 
+	// Log action trigger to ELK Stack
+	h.logActionToELK(action, request, result)
+
 	h.logger.WithField("action", action).Info("Healing action completed")
 	return result, nil
+}
+
+// logActionToELK logs action to ELK Stack
+func (h *Healer) logActionToELK(action string, request *HealingRequest, result *HealingResult) {
+	// Import logging package
+	// This would be: "github.com/ai-driven-self-healing-cloud/config/logging"
+	// For now, log structured data that can be picked up by Logstash
+	
+	logData := map[string]interface{}{
+		"@timestamp":   time.Now().Format(time.RFC3339),
+		"agent_id":     "self-healing-agent",
+		"agent_name":   "Self-Healing Agent",
+		"action":       action,
+		"action_taken": action,
+		"log_type":     "action",
+		"level":        "info",
+		"service_id":   request.ServiceID,
+		"failure_type": request.FailureType,
+		"success":      result.Success,
+		"reasoning":    result.Reasoning,
+		"message":      fmt.Sprintf("Self-Healing Agent performed action: %s", action),
+	}
+	
+	// Log as JSON (can be picked up by Logstash file input)
+	h.logger.WithFields(logrus.Fields(logData)).Info("Action logged to ELK")
 }
 
 // determineHealingStrategy determines the best healing strategy using AI Engine (RL, GNN, LLM)

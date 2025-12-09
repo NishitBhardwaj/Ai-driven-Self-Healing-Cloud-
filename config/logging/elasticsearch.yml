@@ -1,0 +1,38 @@
+# Elasticsearch Configuration for Centralized Logging
+# This configuration is used when running Elasticsearch in Docker or as a service
+
+cluster.name: ai-cloud-logging
+node.name: logging-node-1
+
+# Network settings
+network.host: 0.0.0.0
+http.port: 9200
+
+# Discovery settings (for multi-node clusters)
+discovery.type: single-node
+
+# Data and log paths (for Docker, these are volumes)
+path.data: /usr/share/elasticsearch/data
+path.logs: /usr/share/elasticsearch/logs
+
+# Memory settings
+bootstrap.memory_lock: false
+
+# Security settings (for development)
+xpack.security.enabled: false
+xpack.security.enrollment.enabled: false
+xpack.security.http.ssl.enabled: false
+xpack.security.transport.ssl.enabled: false
+
+# Monitoring
+xpack.monitoring.collection.enabled: true
+
+# Index settings
+action.auto_create_index: true
+
+# Logging level
+logger.level: INFO
+
+# Connection settings for agents
+# Agents should connect to: http://localhost:9200
+

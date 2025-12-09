@@ -46,6 +46,9 @@ type Anomaly struct {
 // AnalyzeMetrics analyzes metrics and detects anomalies using AI Engine (feeds data to all models)
 func (ma *MetricsAnalyzer) AnalyzeMetrics(metrics []Metric) ([]Anomaly, error) {
 	ma.logger.WithField("count", len(metrics)).Info("Analyzing metrics using AI Engine")
+	
+	// Log action trigger to ELK Stack
+	ma.logActionTriggerToELK("analyze_metrics", metrics)
 
 	// Feed metrics to AI Engine
 	aiResults, err := ma.feedMetricsToAI(metrics)
@@ -56,6 +59,21 @@ func (ma *MetricsAnalyzer) AnalyzeMetrics(metrics []Metric) ([]Anomaly, error) {
 
 	// Convert AI results to anomalies
 	anomalies := ma.convertAIResultsToAnomalies(aiResults, metrics)
+	
+	// Record metrics
+	for range anomalies {
+		recordAnomalyDetected()
+	}
+	
+	// Update CPU and memory usage metrics
+	for _, metric := range metrics {
+		if metric.Name == "cpu_usage" {
+			setCPUUsage(metric.Service, metric.Node, metric.Value)
+		} else if metric.Name == "memory_usage" {
+			setMemoryUsage(metric.Service, metric.Node, metric.Value)
+		}
+	}
+	
 	return anomalies, nil
 }
 

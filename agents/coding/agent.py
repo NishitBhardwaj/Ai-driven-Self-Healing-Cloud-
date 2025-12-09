@@ -87,6 +87,13 @@ class CodingAgent:
         """
         self.logger.info("Debugging code issue using AI Engine")
         
+        # Log action trigger to ELK
+        elk_logger = get_elk_logger()
+        elk_logger.log_action_trigger("debug_code", {
+            "stacktrace": stacktrace,
+            "file_path": file_path
+        }, None)
+        
         # Use AI Engine Integration
         try:
             error_info = {

@@ -1,0 +1,106 @@
+# Prometheus Configuration for Agent Metrics Collection
+# This configuration collects metrics from all agents
+
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+  external_labels:
+    cluster: 'ai-cloud-system'
+    environment: 'development'
+
+# Alertmanager configuration
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets: ['localhost:9093']
+
+# Load alerting rules
+rule_files:
+  - "alerts.yml"
+
+# Scrape configurations for all agents
+scrape_configs:
+  # Prometheus itself
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+
+  # Self-Healing Agent
+  - job_name: 'self-healing-agent'
+    static_configs:
+      - targets: ['localhost:8081']
+    metrics_path: '/metrics'
+    scrape_interval: 10s
+
+  # Scaling Agent
+  - job_name: 'scaling-agent'
+    static_configs:
+      - targets: ['localhost:8082']
+    metrics_path: '/metrics'
+    scrape_interval: 10s
+
+  # Task-Solving Agent
+  - job_name: 'task-solving-agent'
+    static_configs:
+      - targets: ['localhost:8083']
+    metrics_path: '/metrics'
+    scrape_interval: 10s
+
+  # Security Agent
+  - job_name: 'security-agent'
+    static_configs:
+      - targets: ['localhost:8084']
+    metrics_path: '/metrics'
+    scrape_interval: 10s
+
+  # Performance Monitoring Agent
+  - job_name: 'performance-monitoring-agent'
+    static_configs:
+      - targets: ['localhost:8085']
+    metrics_path: '/metrics'
+    scrape_interval: 10s
+
+  # Coding Agent
+  - job_name: 'coding-agent'
+    static_configs:
+      - targets: ['localhost:8086']
+    metrics_path: '/metrics'
+    scrape_interval: 10s
+
+  # Optimization Agent
+  - job_name: 'optimization-agent'
+    static_configs:
+      - targets: ['localhost:8087']
+    metrics_path: '/metrics'
+    scrape_interval: 10s
+
+  # Node Exporter - System metrics
+  - job_name: 'node-exporter'
+    static_configs:
+      - targets: ['node-exporter:9100']
+    scrape_interval: 10s
+
+  # cAdvisor - Container metrics
+  - job_name: 'cadvisor'
+    static_configs:
+      - targets: ['cadvisor:8080']
+    scrape_interval: 10s
+
+  # Kubernetes pods (if running in Kubernetes)
+  - job_name: 'kubernetes-pods'
+    kubernetes_sd_configs:
+      - role: pod
+    relabel_configs:
+      - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_scrape]
+        action: keep
+        regex: true
+      - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_path]
+        action: replace
+        target_label: __metrics_path__
+        regex: (.+)
+      - source_labels: [__address__, __meta_kubernetes_pod_annotation_prometheus_io_port]
+        action: replace
+        regex: ([^:]+)(?::\d+)?;(\d+)
+        replacement: $1:$2
+        target_label: __address__
+

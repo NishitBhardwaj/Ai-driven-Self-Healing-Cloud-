@@ -1,0 +1,85 @@
+{
+  "dashboard": {
+    "title": "Event Flows Dashboard",
+    "tags": ["events", "flows"],
+    "timezone": "browser",
+    "schemaVersion": 16,
+    "version": 1,
+    "refresh": "10s",
+    "panels": [
+      {
+        "id": 1,
+        "title": "Healing Actions",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "rate(heal_actions_total[5m])",
+            "legendFormat": "Healing Actions/sec"
+          }
+        ],
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 0}
+      },
+      {
+        "id": 2,
+        "title": "Scaling Actions",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "rate(scaling_actions_total[5m])",
+            "legendFormat": "{{direction}} - {{service}}"
+          }
+        ],
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 0}
+      },
+      {
+        "id": 3,
+        "title": "Intrusion Alerts",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "rate(intrusion_alerts_total[5m])",
+            "legendFormat": "{{severity}} - {{type}}"
+          }
+        ],
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 8}
+      },
+      {
+        "id": 4,
+        "title": "Anomalies Detected",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "rate(anomalies_detected_total[5m])",
+            "legendFormat": "Anomalies/sec"
+          }
+        ],
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 8}
+      },
+      {
+        "id": 5,
+        "title": "Code Fixes",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "rate(code_fixes_total[5m])",
+            "legendFormat": "Fixes/sec"
+          }
+        ],
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 16}
+      },
+      {
+        "id": 6,
+        "title": "Optimization Runs",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "rate(optimization_runs_total[5m])",
+            "legendFormat": "Runs/sec"
+          }
+        ],
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 16}
+      }
+    ]
+  }
+}
+

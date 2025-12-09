@@ -95,8 +95,55 @@ func (a *SelfHealingAgent) handleErrorEvent(data []byte) {
 	// Trigger healing
 }
 
-// ExplainAction provides explanation for healing actions
+// ExplainAction provides human-readable explanation for healing actions
 func (a *SelfHealingAgent) ExplainAction(input interface{}, output interface{}) string {
-	return fmt.Sprintf("Self-Healing Agent: Detected service failure (input=%v) and initiated automatic recovery. Result: %v. The agent analyzed the failure pattern and selected the most appropriate recovery strategy (restart, rollback, or replace) based on the failure type and service state.", input, output)
+	// Parse input to extract failure details
+	var problem, action, reason string
+	
+	// Try to extract structured data from input
+	if inputMap, ok := input.(map[string]interface{}); ok {
+		// Extract problem description
+		if serviceID, ok := inputMap["service_id"].(string); ok {
+			problem = fmt.Sprintf("service '%s'", serviceID)
+		}
+		if failureType, ok := inputMap["failure_type"].(string); ok {
+			if problem != "" {
+				problem += fmt.Sprintf(" experienced %s failure", failureType)
+			} else {
+				problem = fmt.Sprintf("%s failure detected", failureType)
+			}
+		}
+		if errorMsg, ok := inputMap["error"].(string); ok && errorMsg != "" {
+			if problem != "" {
+				problem += fmt.Sprintf(" (%s)", errorMsg)
+			}
+		}
+	}
+	
+	// Try to extract action from output
+	if outputMap, ok := output.(map[string]interface{}); ok {
+		if actionTaken, ok := outputMap["action"].(string); ok {
+			action = actionTaken
+		}
+		if success, ok := outputMap["success"].(bool); ok && success {
+			reason = "to restore service availability"
+		}
+	}
+	
+	// Default values if parsing failed
+	if problem == "" {
+		problem = "a service failure"
+	}
+	if action == "" {
+		action = "restarted the service"
+	}
+	if reason == "" {
+		reason = "to prevent further issues and restore service availability"
+	}
+	
+	// Format explanation in human-readable format
+	explanation := fmt.Sprintf("The agent detected that %s and %s %s.", problem, action, reason)
+	
+	return explanation
 }
 

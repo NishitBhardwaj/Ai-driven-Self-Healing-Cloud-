@@ -12,6 +12,27 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
+// logActionTriggerToELK logs action trigger to ELK Stack
+func (as *AutoScaler) logActionTriggerToELK(action string, metrics map[string]interface{}) {
+	logData := map[string]interface{}{
+		"@timestamp": time.Now().Format(time.RFC3339),
+		"agent_id":    "scaling-agent",
+		"agent_name":   "Scaling Agent",
+		"action":       action,
+		"action_taken": action,
+		"log_type":    "action",
+		"level":       "info",
+		"message":     fmt.Sprintf("Scaling Agent triggered action: %s", action),
+	}
+	
+	// Add metrics to log data
+	for k, v := range metrics {
+		logData[k] = v
+	}
+	
+	as.logger.WithFields(logrus.Fields(logData)).Info("Action logged to ELK")
+}
+
 // AutoScaler handles automatic scaling operations
 type AutoScaler struct {
 	logger *logrus.Logger
@@ -85,6 +106,7 @@ func (as *AutoScaler) ScaleDown(serviceID string, targetReplicas int) (*ScalingR
 
 // EvaluateScaling evaluates if scaling is needed based on metrics using Transformer predictions
 func (as *AutoScaler) EvaluateScaling(serviceID string, metrics map[string]float64) (*ScalingRequest, error) {
+	startTime := time.Now()
 	as.logger.WithField("service_id", serviceID).Debug("Evaluating scaling needs using AI Engine")
 
 	// Try to use AI Engine integration (Transformer forecasting)

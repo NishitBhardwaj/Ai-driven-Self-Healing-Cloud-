@@ -147,8 +147,40 @@ func (a *TaskSolvingAgent) handleTaskEvent(data []byte) {
 	a.ProcessTask(&task)
 }
 
-// ExplainAction provides explanation for task processing actions
+// ExplainAction provides human-readable explanation for task processing actions
 func (a *TaskSolvingAgent) ExplainAction(input interface{}, output interface{}) string {
-	return fmt.Sprintf("Task-Solving Agent: Analyzed user task (input=%v) and converted it into actionable steps using LLM interpretation. Generated result (output=%v). The task was broken down into specific agent actions based on intent analysis.", input, output)
+	var problem, action, reason string
+	
+	// Parse input to extract task details
+	if inputMap, ok := input.(map[string]interface{}); ok {
+		if taskType, ok := inputMap["task_type"].(string); ok {
+			problem = fmt.Sprintf("a %s task was received", taskType)
+		} else if taskDesc, ok := inputMap["description"].(string); ok {
+			problem = fmt.Sprintf("task '%s' was received", taskDesc)
+		}
+	}
+	
+	// Parse output to extract action
+	if outputMap, ok := output.(map[string]interface{}); ok {
+		if actionTaken, ok := outputMap["action"].(string); ok {
+			action = actionTaken
+		} else if steps, ok := outputMap["steps"].([]interface{}); ok && len(steps) > 0 {
+			action = fmt.Sprintf("delegated to %d agent(s) for processing", len(steps))
+		}
+	}
+	
+	// Default values
+	if problem == "" {
+		problem = "a user task was received"
+	}
+	if action == "" {
+		action = "processed the task"
+	}
+	reason = "to fulfill the user's request"
+	
+	// Format explanation
+	explanation := fmt.Sprintf("The agent detected that %s and %s %s.", problem, action, reason)
+	
+	return explanation
 }
 
