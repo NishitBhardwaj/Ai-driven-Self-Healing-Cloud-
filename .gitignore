@@ -77,6 +77,11 @@ config/secrets/
 **/*_keys.txt
 **/*secret*
 **/*secret*/
+# AWS Credentials CSV files
+*.csv
+**/*accessKeys*.csv
+**/*credentials*.csv
+Nishit_self_ai_accessKeys.csv
 
 # Test coverage
 .coverage

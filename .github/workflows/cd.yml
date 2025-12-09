@@ -41,6 +41,8 @@ jobs:
         uses: azure/setup-helm@v3
         with:
           version: 'latest'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
@@ -114,6 +116,8 @@ jobs:
         uses: azure/setup-helm@v3
         with:
           version: 'latest'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
