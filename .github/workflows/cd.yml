@@ -15,12 +15,25 @@ on:
         options:
           - staging
           - production
+      aws_region:
+        description: 'AWS Region (overrides secret)'
+        required: false
+        default: ''
+        type: choice
+        options:
+          - ''
+          - us-east-1
+          - us-west-2
+          - ap-south-1
+          - ca-central-1
+          - eu-west-1
+          - eu-central-1
 
 env:
   REGISTRY: ghcr.io
   IMAGE_PREFIX: ${{ github.repository_owner }}/ai-cloud
   KUBERNETES_NAMESPACE: ai-cloud-${{ github.event.inputs.environment || 'staging' }}
-  AWS_REGION: ${{ secrets.AWS_REGION || 'us-east-1' }}
+  AWS_REGION: ${{ github.event.inputs.aws_region || secrets.AWS_REGION || 'us-east-1' }}
 
 jobs:
   # Deploy to Kubernetes
@@ -103,7 +116,7 @@ jobs:
     needs: [deploy]
     if: failure()
     env:
-      AWS_REGION: ${{ secrets.AWS_REGION || 'us-east-1' }}
+      AWS_REGION: ${{ github.event.inputs.aws_region || secrets.AWS_REGION || 'us-east-1' }}
       KUBERNETES_NAMESPACE: ai-cloud-${{ github.event.inputs.environment || 'staging' }}
     steps:
       - name: Checkout code
@@ -118,6 +131,14 @@ jobs:
           version: 'latest'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Validate AWS Region
+        run: |
+          if [ -z "${{ env.AWS_REGION }}" ]; then
+            echo "❌ ERROR: AWS_REGION is not set!"
+            exit 1
+          fi
+          echo "✅ Using AWS Region: ${{ env.AWS_REGION }}"
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
@@ -134,7 +155,16 @@ jobs:
             exit 1
           fi
           echo "Configuring kubectl for EKS cluster: ${{ secrets.EKS_CLUSTER_NAME }}"
+          echo "AWS Region: ${{ env.AWS_REGION }}"
           aws eks update-kubeconfig --name "${{ secrets.EKS_CLUSTER_NAME }}" --region "${{ env.AWS_REGION }}"
+          
+          # Verify kubectl is configured correctly
+          echo "Verifying kubectl configuration..."
+          kubectl cluster-info || echo "⚠️ Warning: kubectl cluster-info failed, but continuing..."
+          
+          # Verify kubectl is configured correctly
+          echo "Verifying kubectl configuration..."
+          kubectl cluster-info || echo "⚠️ Warning: kubectl cluster-info failed, but continuing..."
 
       - name: Rollback Helm release
         run: |
