@@ -33,7 +33,7 @@ env:
   REGISTRY: ghcr.io
   IMAGE_PREFIX: ${{ github.repository_owner }}/ai-cloud
   KUBERNETES_NAMESPACE: ai-cloud-${{ github.event.inputs.environment || 'staging' }}
-  AWS_REGION: ${{ github.event.inputs.aws_region || secrets.AWS_REGION || 'us-east-1' }}
+  AWS_REGION: ${{ github.event.inputs.aws_region || secrets.AWS_REGION || 'ap-south-1' }}
 
 jobs:
   # Deploy to Kubernetes
@@ -116,7 +116,7 @@ jobs:
     needs: [deploy]
     if: failure()
     env:
-      AWS_REGION: ${{ github.event.inputs.aws_region || secrets.AWS_REGION || 'us-east-1' }}
+      AWS_REGION: ${{ github.event.inputs.aws_region || secrets.AWS_REGION || 'ap-south-1' }}
       KUBERNETES_NAMESPACE: ai-cloud-${{ github.event.inputs.environment || 'staging' }}
     steps:
       - name: Checkout code

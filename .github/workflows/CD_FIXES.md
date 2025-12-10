@@ -78,11 +78,11 @@ To use a custom AWS region, add these secrets in GitHub:
 
 ## Default Region
 
-If `AWS_REGION` secret is not set, the pipeline will use **us-east-1** as the default region.
+If `AWS_REGION` secret is not set, the pipeline will use **ap-south-1** (Mumbai) as the default region.
 
 To change the default, modify line 23 in `.github/workflows/cd.yml`:
 ```yaml
-AWS_REGION: ${{ secrets.AWS_REGION || 'your-preferred-region' }}
+AWS_REGION: ${{ secrets.AWS_REGION || 'ap-south-1' }}
 ```
 
 ## Troubleshooting
