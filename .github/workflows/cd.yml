@@ -62,26 +62,18 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ secrets.AWS_REGION }}
 
-      - name: Debug EKS vars
+      - name: Debug EKS vars (safe)
         run: |
           CLUSTER_NAME='${{ secrets.EKS_CLUSTER_NAME }}'
           REGION='${{ secrets.AWS_REGION }}'
-          echo "Cluster name -> >$CLUSTER_NAME<"
-          echo "Region       -> >$REGION<"
-          echo "Name length  -> ${#CLUSTER_NAME}"
-          if [ -z "$CLUSTER_NAME" ]; then
-            echo "ERROR: EKS_CLUSTER_NAME is empty!"
-            exit 1
-          fi
-          if [ -z "$REGION" ]; then
-            echo "ERROR: AWS_REGION is empty!"
-            exit 1
-          fi
-          echo "EKS variables are set correctly"
+          echo "Cluster name length: ${#CLUSTER_NAME}"
+          echo "Region length: ${#REGION}"
 
       - name: Configure kubectl for EKS
         run: |
+          set -euo pipefail
           set -x
+          echo "Configuring kubectl for EKS cluster..."
           aws eks update-kubeconfig \
             --name "${{ secrets.EKS_CLUSTER_NAME }}" \
             --region "${{ secrets.AWS_REGION }}"
@@ -165,16 +157,14 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ secrets.AWS_REGION }}
 
-      - name: Configure kubectl for EKS
+      - name: Configure kubectl for EKS (rollback)
         run: |
+          set -euo pipefail
           set -x
-          if [ -z "${{ secrets.EKS_CLUSTER_NAME }}" ]; then
-            echo "ERROR: EKS_CLUSTER_NAME secret is not set!"
-            exit 1
-          fi
-          echo "Configuring kubectl for EKS cluster: ${{ secrets.EKS_CLUSTER_NAME }}"
-          echo "AWS Region: ${{ secrets.AWS_REGION }}"
-          aws eks update-kubeconfig --name "${{ secrets.EKS_CLUSTER_NAME }}" --region "${{ secrets.AWS_REGION }}"
+          echo "Configuring kubectl for EKS cluster (rollback)..."
+          aws eks update-kubeconfig \
+            --name "${{ secrets.EKS_CLUSTER_NAME }}" \
+            --region "${{ secrets.AWS_REGION }}"
           
           # Verify kubectl is configured correctly
           echo "Verifying kubectl configuration..."
