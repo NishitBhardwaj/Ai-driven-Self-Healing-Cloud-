@@ -204,7 +204,7 @@ jobs:
           helm rollback ai-cloud -n ${{ env.KUBERNETES_NAMESPACE }} || echo "Rollback failed or no previous release"
 
       - name: Notify team
-        if: secrets.SLACK_WEBHOOK_URL != ''
+        if: ${{ secrets.SLACK_WEBHOOK_URL != '' }}
         uses: 8398a7/action-slack@v3
         with:
           status: failure
