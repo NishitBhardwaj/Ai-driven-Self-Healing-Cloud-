@@ -43,6 +43,19 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Resolve AWS Region
+        run: |
+          # Prefer workflow input if provided, otherwise use secret
+          INPUT_REGION='${{ github.event.inputs.aws_region }}'
+          SECRET_REGION='${{ secrets.AWS_REGION }}'
+          if [ -n "$INPUT_REGION" ]; then
+            echo "Using region from workflow input: $INPUT_REGION"
+            echo "AWS_REGION=$INPUT_REGION" >> $GITHUB_ENV
+          else
+            echo "Using region from secrets: $SECRET_REGION"
+            echo "AWS_REGION=$SECRET_REGION" >> $GITHUB_ENV
+          fi
+
       - name: Set up kubectl
         uses: azure/setup-kubectl@v3
         with:
@@ -60,7 +73,7 @@ jobs:
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ${{ secrets.AWS_REGION }}
+          aws-region: ${{ env.AWS_REGION }}
 
       - name: Who am I (AWS identity)?
         run: aws sts get-caller-identity
@@ -68,7 +81,7 @@ jobs:
       - name: Debug EKS vars (safe)
         run: |
           CLUSTER_NAME='${{ secrets.EKS_CLUSTER_NAME }}'
-          REGION='${{ secrets.AWS_REGION }}'
+          REGION='${{ env.AWS_REGION }}'
           echo "Cluster name length: ${#CLUSTER_NAME}"
           echo "Region length: ${#REGION}"
 
@@ -79,7 +92,13 @@ jobs:
           echo "Configuring kubectl for EKS cluster..."
           aws eks update-kubeconfig \
             --name "${{ secrets.EKS_CLUSTER_NAME }}" \
-            --region "${{ secrets.AWS_REGION }}"
+            --region "${{ env.AWS_REGION }}"
+
+      - name: Test cluster access
+        run: |
+          set -e
+          kubectl cluster-info
+          kubectl get namespaces --no-headers || true
 
 
       - name: Log in to Container Registry
@@ -135,6 +154,19 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Resolve AWS Region
+        run: |
+          # Prefer workflow input if provided, otherwise use secret
+          INPUT_REGION='${{ github.event.inputs.aws_region }}'
+          SECRET_REGION='${{ secrets.AWS_REGION }}'
+          if [ -n "$INPUT_REGION" ]; then
+            echo "Using region from workflow input: $INPUT_REGION"
+            echo "AWS_REGION=$INPUT_REGION" >> $GITHUB_ENV
+          else
+            echo "Using region from secrets: $SECRET_REGION"
+            echo "AWS_REGION=$SECRET_REGION" >> $GITHUB_ENV
+          fi
+
       - name: Set up kubectl
         uses: azure/setup-kubectl@v3
 
@@ -145,20 +177,12 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Validate AWS Region
-        run: |
-          if [ -z "${{ secrets.AWS_REGION }}" ]; then
-            echo "ERROR: AWS_REGION is not set!"
-            exit 1
-          fi
-          echo "Using AWS Region: ${{ secrets.AWS_REGION }}"
-
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ${{ secrets.AWS_REGION }}
+          aws-region: ${{ env.AWS_REGION }}
 
       - name: Configure kubectl for EKS (rollback)
         run: |
@@ -167,11 +191,13 @@ jobs:
           echo "Configuring kubectl for EKS cluster (rollback)..."
           aws eks update-kubeconfig \
             --name "${{ secrets.EKS_CLUSTER_NAME }}" \
-            --region "${{ secrets.AWS_REGION }}"
-          
-          # Verify kubectl is configured correctly
-          echo "Verifying kubectl configuration..."
-          kubectl cluster-info || echo "Warning: kubectl cluster-info failed, but continuing..."
+            --region "${{ env.AWS_REGION }}"
+
+      - name: Test cluster access
+        run: |
+          set -e
+          kubectl cluster-info
+          kubectl get namespaces --no-headers || true
 
       - name: Rollback Helm release
         run: |
