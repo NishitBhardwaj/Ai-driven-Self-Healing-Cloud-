@@ -34,8 +34,46 @@ env:
   KUBERNETES_NAMESPACE: ai-cloud-${{ github.event.inputs.environment || 'staging' }}
 
 jobs:
+  # Install Monitoring CRDs
+  install-monitoring-crds:
+    name: Install Monitoring CRDs (ServiceMonitor / Prometheus Operator)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Configure kubectl for EKS
+        run: |
+          aws eks update-kubeconfig \
+            --name "${{ secrets.EKS_CLUSTER_NAME }}" \
+            --region "${{ secrets.AWS_REGION }}"
+
+      - name: Check if ServiceMonitor CRD exists
+        id: crd_check
+        run: |
+          if kubectl get crd servicemonitors.monitoring.coreos.com >/dev/null 2>&1; then
+            echo "crd_exists=true" >> $GITHUB_OUTPUT
+          else
+            echo "crd_exists=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Install ServiceMonitor CRDs if missing
+        if: steps.crd_check.outputs.crd_exists == 'false'
+        run: |
+          echo "Installing Prometheus Operator CRDs..."
+          kubectl apply --server-side -f https://raw.githubusercontent.com/prometheus-operator/prometheus-operator/main/example/prometheus-operator-crd/monitoring.coreos.com_servicemonitors.yaml
+          kubectl apply --server-side -f https://raw.githubusercontent.com/prometheus-operator/prometheus-operator/main/example/prometheus-operator-crd/monitoring.coreos.com_podmonitors.yaml
+          kubectl apply --server-side -f https://raw.githubusercontent.com/prometheus-operator/prometheus-operator/main/example/prometheus-operator-crd/monitoring.coreos.com_prometheuses.yaml
+          kubectl apply --server-side -f https://raw.githubusercontent.com/prometheus-operator/prometheus-operator/main/example/prometheus-operator-crd/monitoring.coreos.com_alertmanagers.yaml
+          echo "CRDs installed successfully."
+
   # Deploy to Kubernetes
   deploy:
+    needs: [install-monitoring-crds]
     name: Deploy to Kubernetes
     runs-on: ubuntu-latest
     environment: ${{ github.event.inputs.environment || 'staging' }}
@@ -203,6 +241,12 @@ jobs:
         run: |
           helm rollback ai-cloud -n ${{ env.KUBERNETES_NAMESPACE }} || echo "Rollback failed or no previous release"
 
-   
+      - name: Notify team
+        if: ${{ secrets.SLACK_WEBHOOK_URL != '' }}
+        uses: 8398a7/action-slack@v3
+        with:
+          status: failure
+          text: 'Deployment failed and was rolled back'
+          webhook_url: ${{ secrets.SLACK_WEBHOOK_URL }}
         continue-on-error: true
 
