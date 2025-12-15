@@ -156,9 +156,19 @@ jobs:
             --set image.tag=${{ github.sha }} \
             --set environment=${{ github.event.inputs.environment || 'staging' }} \
             --create-namespace \
+            --atomic \
+            --timeout 15m \
             --wait \
-            --timeout 10m \
-            --atomic
+            --debug
+
+      - name: Check pod status (debug)
+        if: always()
+        run: |
+          echo "=== Pod Status ==="
+          kubectl get pods -n ${{ env.KUBERNETES_NAMESPACE }} -o wide || true
+          echo ""
+          echo "=== Describe Pods (for troubleshooting) ==="
+          kubectl describe pods -n ${{ env.KUBERNETES_NAMESPACE }} || true
 
       - name: Verify deployment
         run: |
