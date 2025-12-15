@@ -146,9 +146,36 @@ jobs:
       - name: Build Docker images
         run: |
           echo "Building all service images..."
-          chmod +x docker/build.sh
-          cd docker
-          ./build.sh
+          
+          # Build self-healing
+          docker build -t ai-cloud-self-healing:latest \
+            -f docker/agents/self-healing/Dockerfile .
+          
+          # Build scaling
+          docker build -t ai-cloud-scaling:latest \
+            -f docker/agents/scaling/Dockerfile .
+          
+          # Build task-solving
+          docker build -t ai-cloud-task-solving:latest \
+            -f docker/agents/task-solving/Dockerfile .
+          
+          # Build performance-monitoring
+          docker build -t ai-cloud-performance-monitoring:latest \
+            -f docker/agents/performance-monitoring/Dockerfile .
+          
+          # Build coding
+          docker build -t ai-cloud-coding:latest \
+            -f docker/agents/coding/Dockerfile .
+          
+          # Build security
+          docker build -t ai-cloud-security:latest \
+            -f docker/agents/security/Dockerfile .
+          
+          # Build optimization
+          docker build -t ai-cloud-optimization:latest \
+            -f docker/agents/optimization/Dockerfile .
+          
+          echo "All images built successfully!"
 
       - name: Tag images for ECR
         run: |
