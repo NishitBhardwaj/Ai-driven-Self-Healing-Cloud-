@@ -7,9 +7,9 @@ global:
   imagePullSecrets: []
 
 image:
-  registry: ghcr.io
-  prefix: nishitbhardwaj/ai-cloud  # Format: owner/repository
-  pullPolicy: IfNotPresent
+  registry: 365341398047.dkr.ecr.ap-south-1.amazonaws.com
+  prefix: ai-cloud  # ECR repository name
+  pullPolicy: Always
   tag: "latest"
 
 # Self-Healing Agent

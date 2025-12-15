@@ -29,8 +29,10 @@ on:
           - eu-central-1
 
 env:
-  REGISTRY: ghcr.io
-  IMAGE_PREFIX: ${{ github.repository_owner }}/ai-cloud
+  AWS_ACCOUNT_ID: "365341398047"
+  AWS_REGION_DEFAULT: ap-south-1
+  ECR_REGISTRY: 365341398047.dkr.ecr.ap-south-1.amazonaws.com
+  ECR_REPOSITORY: ai-cloud
   KUBERNETES_NAMESPACE: ai-cloud-${{ github.event.inputs.environment || 'staging' }}
 
 jobs:
@@ -134,12 +136,10 @@ jobs:
           kubectl get nodes
           kubectl version --client
 
-      - name: Log in to Container Registry
-        uses: docker/login-action@v3
-        with:
-          registry: ${{ env.REGISTRY }}
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Log in to Amazon ECR
+        run: |
+          aws ecr get-login-password --region ${{ env.AWS_REGION }} | \
+          docker login --username AWS --password-stdin ${{ env.ECR_REGISTRY }}
 
       - name: Create namespace
         run: |
@@ -151,8 +151,8 @@ jobs:
           helm upgrade --install ai-cloud \
             kubernetes/helm/ai-cloud \
             --namespace ${{ env.KUBERNETES_NAMESPACE }} \
-            --set image.registry=${{ env.REGISTRY }} \
-            --set image.prefix=${{ env.IMAGE_PREFIX }} \
+            --set image.registry=${{ env.ECR_REGISTRY }} \
+            --set image.prefix=${{ env.ECR_REPOSITORY }} \
             --set image.tag=${{ github.sha }} \
             --set environment=${{ github.event.inputs.environment || 'staging' }} \
             --create-namespace \
