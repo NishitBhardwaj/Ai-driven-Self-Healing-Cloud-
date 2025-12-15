@@ -138,8 +138,39 @@ jobs:
 
       - name: Log in to Amazon ECR
         run: |
-          aws ecr get-login-password --region ${{ env.AWS_REGION }} | \
-          docker login --username AWS --password-stdin ${{ env.ECR_REGISTRY }}
+          aws ecr get-login-password --region ap-south-1 | \
+          docker login --username AWS --password-stdin 365341398047.dkr.ecr.ap-south-1.amazonaws.com
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build Docker images
+        run: |
+          echo "Building all service images..."
+          chmod +x docker/build.sh
+          cd docker
+          ./build.sh
+
+      - name: Tag images for ECR
+        run: |
+          echo "Tagging images for ECR..."
+          for img in coding scaling security self-healing optimization performance-monitoring task-solving; do
+            echo "Tagging ai-cloud-$img:latest"
+            docker tag ai-cloud-$img:latest \
+              365341398047.dkr.ecr.ap-south-1.amazonaws.com/ai-cloud-$img:latest
+            docker tag ai-cloud-$img:latest \
+              365341398047.dkr.ecr.ap-south-1.amazonaws.com/ai-cloud-$img:${{ github.sha }}
+          done
+
+      - name: Push images to ECR
+        run: |
+          echo "Pushing images to ECR..."
+          for img in coding scaling security self-healing optimization performance-monitoring task-solving; do
+            echo "Pushing ai-cloud-$img"
+            docker push 365341398047.dkr.ecr.ap-south-1.amazonaws.com/ai-cloud-$img:latest
+            docker push 365341398047.dkr.ecr.ap-south-1.amazonaws.com/ai-cloud-$img:${{ github.sha }}
+          done
+          echo "All images pushed successfully!"
 
       - name: Create namespace
         run: |
@@ -157,7 +188,7 @@ jobs:
             --set environment=${{ github.event.inputs.environment || 'staging' }} \
             --create-namespace \
             --atomic \
-            --timeout 15m \
+            --timeout 20m \
             --wait \
             --debug
 
