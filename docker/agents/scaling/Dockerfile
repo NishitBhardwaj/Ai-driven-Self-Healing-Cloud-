@@ -14,6 +14,9 @@ RUN go mod download
 # Copy source code
 COPY . .
 
+# Download all dependencies (including missing ones)
+RUN go mod tidy && go mod download
+
 # Build the application
 WORKDIR /build/agents/scaling
 RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o agent .
