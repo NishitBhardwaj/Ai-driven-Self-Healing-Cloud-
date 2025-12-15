@@ -89,14 +89,7 @@ type LLMReasoningService interface {
 	GenerateExplanation(agentID, action, problem string, reasoningChain []ReasoningStep) (string, error)
 }
 
-// ReasoningLogger interface for logging explanations
-type ReasoningLogger interface {
-	// LogExplanation logs an action explanation
-	LogExplanation(explanation *ActionExplanation) error
-
-	// LogReasoningStep logs a single reasoning step
-	LogReasoningStep(agentID string, step ReasoningStep) error
-}
+// ReasoningLogger is defined in xai_logger.go
 
 // NewXAIEngine creates a new XAI engine
 func NewXAIEngine(logger ReasoningLogger, llmReasoning LLMReasoningService) *XAIEngine {

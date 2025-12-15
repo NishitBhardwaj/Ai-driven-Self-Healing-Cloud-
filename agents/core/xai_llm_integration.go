@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
-	"os/exec"
 	"path/filepath"
 )
 
@@ -41,6 +40,7 @@ func (l *LLMReasoningIntegration) GenerateChainOfThought(
 	}
 
 	inputJSON, err := json.Marshal(inputData)
+	_ = inputJSON // Used later when Python LLM service is integrated
 	if err != nil {
 		return l.generateFallbackReasoningChain(agentID, action, problem), nil
 	}

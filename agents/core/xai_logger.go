@@ -53,6 +53,7 @@ func (e *ELKStackLogger) LogExplanation(explanation *ActionExplanation) error {
 		"context":           explanation.Context,
 		"timestamp":         explanation.Timestamp.Format(time.RFC3339),
 	}
+	_ = logDoc // Will be used when Elasticsearch integration is enabled
 
 	// In production, this would send to Elasticsearch
 	// For now, log to file as fallback
@@ -70,6 +71,7 @@ func (e *ELKStackLogger) LogReasoningStep(agentID string, step ReasoningStep) er
 		"input":            step.Input,
 		"output":           step.Output,
 	}
+	_ = logDoc // Will be used when Elasticsearch integration is enabled
 
 	// In production, this would send to Elasticsearch
 	// For now, log to file as fallback

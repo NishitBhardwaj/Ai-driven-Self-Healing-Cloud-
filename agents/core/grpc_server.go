@@ -3,7 +3,6 @@ package core
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
