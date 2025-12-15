@@ -33,7 +33,7 @@ spec:
         {{- toYaml .Values.podSecurityContext | nindent 8 }}
       containers:
       - name: self-healing
-        image: "{{ .Values.image.registry }}/{{ .Values.image.prefix }}-{{ .Values.selfHealing.image.repository }}:{{ .Values.image.tag }}"
+        image: "{{ .Values.image.registry }}/{{ .Values.image.prefix }}/{{ .Values.selfHealing.image.repository }}:{{ .Values.image.tag }}"
         imagePullPolicy: {{ .Values.image.pullPolicy }}
         ports:
         - name: http
@@ -107,7 +107,7 @@ spec:
       serviceAccountName: {{ include "ai-cloud.serviceAccountName" . }}
       containers:
       - name: scaling
-        image: "{{ .Values.image.registry }}/{{ .Values.image.prefix }}-{{ .Values.scaling.image.repository }}:{{ .Values.image.tag }}"
+        image: "{{ .Values.image.registry }}/{{ .Values.image.prefix }}/{{ .Values.scaling.image.repository }}:{{ .Values.image.tag }}"
         imagePullPolicy: {{ .Values.image.pullPolicy }}
         ports:
         - name: http
@@ -151,7 +151,7 @@ spec:
     spec:
       containers:
       - name: task-solving
-        image: "{{ .Values.image.registry }}/{{ .Values.image.prefix }}-{{ .Values.taskSolving.image.repository }}:{{ .Values.image.tag }}"
+        image: "{{ .Values.image.registry }}/{{ .Values.image.prefix }}/{{ .Values.taskSolving.image.repository }}:{{ .Values.image.tag }}"
         ports:
         - name: http
           containerPort: {{ .Values.taskSolving.service.port }}
@@ -192,7 +192,7 @@ spec:
     spec:
       containers:
       - name: performance-monitoring
-        image: "{{ .Values.image.registry }}/{{ .Values.image.prefix }}-{{ .Values.performanceMonitoring.image.repository }}:{{ .Values.image.tag }}"
+        image: "{{ .Values.image.registry }}/{{ .Values.image.prefix }}/{{ .Values.performanceMonitoring.image.repository }}:{{ .Values.image.tag }}"
         ports:
         - name: http
           containerPort: {{ .Values.performanceMonitoring.service.port }}
@@ -233,7 +233,7 @@ spec:
     spec:
       containers:
       - name: coding
-        image: "{{ .Values.image.registry }}/{{ .Values.image.prefix }}-{{ .Values.coding.image.repository }}:{{ .Values.image.tag }}"
+        image: "{{ .Values.image.registry }}/{{ .Values.image.prefix }}/{{ .Values.coding.image.repository }}:{{ .Values.image.tag }}"
         ports:
         - name: http
           containerPort: {{ .Values.coding.service.port }}
@@ -274,7 +274,7 @@ spec:
     spec:
       containers:
       - name: security
-        image: "{{ .Values.image.registry }}/{{ .Values.image.prefix }}-{{ .Values.security.image.repository }}:{{ .Values.image.tag }}"
+        image: "{{ .Values.image.registry }}/{{ .Values.image.prefix }}/{{ .Values.security.image.repository }}:{{ .Values.image.tag }}"
         ports:
         - name: http
           containerPort: {{ .Values.security.service.port }}
@@ -315,7 +315,7 @@ spec:
     spec:
       containers:
       - name: optimization
-        image: "{{ .Values.image.registry }}/{{ .Values.image.prefix }}-{{ .Values.optimization.image.repository }}:{{ .Values.image.tag }}"
+        image: "{{ .Values.image.registry }}/{{ .Values.image.prefix }}/{{ .Values.optimization.image.repository }}:{{ .Values.image.tag }}"
         ports:
         - name: http
           containerPort: {{ .Values.optimization.service.port }}

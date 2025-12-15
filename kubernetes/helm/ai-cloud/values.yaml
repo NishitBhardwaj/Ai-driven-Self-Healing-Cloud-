@@ -8,7 +8,7 @@ global:
 
 image:
   registry: ghcr.io
-  prefix: ai-cloud
+  prefix: nishitbhardwaj/ai-cloud  # Format: owner/repository
   pullPolicy: IfNotPresent
   tag: "latest"
 
