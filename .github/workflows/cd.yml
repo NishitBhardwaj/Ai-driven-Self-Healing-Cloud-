@@ -32,7 +32,6 @@ env:
   AWS_ACCOUNT_ID: "365341398047"
   AWS_REGION_DEFAULT: ap-south-1
   ECR_REGISTRY: 365341398047.dkr.ecr.ap-south-1.amazonaws.com
-  ECR_REPOSITORY: ai-cloud
   KUBERNETES_NAMESPACE: ai-cloud-${{ github.event.inputs.environment || 'staging' }}
 
 jobs:
@@ -176,20 +175,26 @@ jobs:
         run: |
           kubectl create namespace ${{ env.KUBERNETES_NAMESPACE }} --dry-run=client -o yaml | kubectl apply -f -
 
+      - name: Verify images exist in ECR
+        run: |
+          echo "Verifying all images exist in ECR..."
+          for repo in ai-cloud-coding ai-cloud-scaling ai-cloud-security ai-cloud-self-healing ai-cloud-optimization ai-cloud-performance-monitoring ai-cloud-task-solving; do
+            echo "Checking $repo..."
+            aws ecr list-images --repository-name $repo --region ap-south-1 || echo "WARNING: No images found in $repo"
+          done
+
       - name: Deploy with Helm
         id: helm_deploy
         run: |
           helm upgrade --install ai-cloud \
             kubernetes/helm/ai-cloud \
             --namespace ${{ env.KUBERNETES_NAMESPACE }} \
-            --set image.registry=${{ env.ECR_REGISTRY }} \
-            --set image.prefix=${{ env.ECR_REPOSITORY }} \
-            --set image.tag=${{ github.sha }} \
+            --set global.imageRegistry=${{ env.ECR_REGISTRY }} \
+            --set global.imageTag=${{ github.sha }} \
             --set environment=${{ github.event.inputs.environment || 'staging' }} \
             --create-namespace \
-            --atomic \
-            --timeout 20m \
             --wait \
+            --timeout 20m \
             --debug
 
       - name: Check pod status (debug)

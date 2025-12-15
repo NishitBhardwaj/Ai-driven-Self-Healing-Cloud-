@@ -3,14 +3,12 @@
 
 global:
   environment: production
-  imageRegistry: ""
+  imageRegistry: 365341398047.dkr.ecr.ap-south-1.amazonaws.com
+  imageTag: latest
   imagePullSecrets: []
 
 image:
-  registry: 365341398047.dkr.ecr.ap-south-1.amazonaws.com
-  prefix: ai-cloud  # ECR repository name
   pullPolicy: Always
-  tag: "latest"
 
 # Self-Healing Agent
 selfHealing:
