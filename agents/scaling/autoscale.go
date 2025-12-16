@@ -113,21 +113,31 @@ func (as *AutoScaler) EvaluateScaling(serviceID string, metrics map[string]float
 	aiRecommendation, err := as.callAIIntegration(serviceID, metrics)
 	if err != nil {
 		as.logger.WithError(err).Warn("AI Engine integration failed, using fallback evaluation")
-		return as.fallbackScalingEvaluation(serviceID, metrics), nil
+		request := as.fallbackScalingEvaluation(serviceID, metrics)
+		as.logger.WithField("duration_ms", time.Since(startTime).Milliseconds()).Debug("Scaling evaluation completed")
+		return request, nil
 	}
 
 	if aiRecommendation != nil {
+		// Convert metrics to map[string]interface{}
+		metadata := make(map[string]interface{})
+		for k, v := range metrics {
+			metadata[k] = v
+		}
 		request := &ScalingRequest{
 			ServiceID:      serviceID,
 			CurrentReplicas: aiRecommendation["current_replicas"].(int),
 			TargetReplicas:  aiRecommendation["target_replicas"].(int),
 			Reason:         aiRecommendation["reasoning"].(string),
-			Metadata:       metrics,
+			Metadata:       metadata,
 		}
+		as.logger.WithField("duration_ms", time.Since(startTime).Milliseconds()).Debug("Scaling evaluation completed")
 		return request, nil
 	}
 
-	return as.fallbackScalingEvaluation(serviceID, metrics), nil
+	request := as.fallbackScalingEvaluation(serviceID, metrics)
+	as.logger.WithField("duration_ms", time.Since(startTime).Milliseconds()).Debug("Scaling evaluation completed")
+	return request, nil
 }
 
 // callAIIntegration calls Python AI integration wrapper
@@ -176,12 +186,17 @@ func (as *AutoScaler) callAIIntegration(serviceID string, metrics map[string]flo
 
 // fallbackScalingEvaluation provides fallback when AI is unavailable
 func (as *AutoScaler) fallbackScalingEvaluation(serviceID string, metrics map[string]float64) *ScalingRequest {
+	// Convert metrics to map[string]interface{}
+	metadata := make(map[string]interface{})
+	for k, v := range metrics {
+		metadata[k] = v
+	}
 	return &ScalingRequest{
 		ServiceID:      serviceID,
 		CurrentReplicas: 2,
 		TargetReplicas:  4,
 		Reason:         "High CPU utilization detected",
-		Metadata:       metrics,
+		Metadata:       metadata,
 	}
 }
 

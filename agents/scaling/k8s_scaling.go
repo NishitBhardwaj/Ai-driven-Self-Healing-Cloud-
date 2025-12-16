@@ -122,7 +122,7 @@ func (ks *K8sScaling) SetReplicas(serviceName string, replicas int32) error {
 
 	// Try deployment first
 	deployment, err := ks.k8sClient.AppsV1().Deployments(ks.namespace).Get(ctx, serviceName, metav1.GetOptions{})
-	if err == nil {
+	if err == nil && deployment != nil {
 		patch := []byte(fmt.Sprintf(`{"spec":{"replicas":%d}}`, replicas))
 		_, err = ks.k8sClient.AppsV1().Deployments(ks.namespace).Patch(
 			ctx,
@@ -144,7 +144,7 @@ func (ks *K8sScaling) SetReplicas(serviceName string, replicas int32) error {
 
 	// Try StatefulSet
 	statefulSet, err := ks.k8sClient.AppsV1().StatefulSets(ks.namespace).Get(ctx, serviceName, metav1.GetOptions{})
-	if err == nil {
+	if err == nil && statefulSet != nil {
 		patch := []byte(fmt.Sprintf(`{"spec":{"replicas":%d}}`, replicas))
 		_, err = ks.k8sClient.AppsV1().StatefulSets(ks.namespace).Patch(
 			ctx,
@@ -247,8 +247,8 @@ func (ks *K8sScaling) predictReplicas(serviceName string, current int32, hpa *au
 	if hour >= 9 && hour <= 17 {
 		// Business hours - scale up
 		predicted = current + 1
-		if hpa != nil && hpa.Spec.MaxReplicas != nil && predicted > *hpa.Spec.MaxReplicas {
-			predicted = *hpa.Spec.MaxReplicas
+		if hpa != nil && predicted > hpa.Spec.MaxReplicas {
+			predicted = hpa.Spec.MaxReplicas
 		}
 		reason = "Predicted higher load during business hours"
 	} else {
@@ -303,10 +303,7 @@ func (ks *K8sScaling) ScaleToMax(serviceName string) error {
 		return fmt.Errorf("failed to get HPA for %s: %w", serviceName, err)
 	}
 
-	if hpa.Spec.MaxReplicas == nil {
-		return fmt.Errorf("HPA for %s has no max replicas set", serviceName)
-	}
-
-	return ks.SetReplicas(serviceName, *hpa.Spec.MaxReplicas)
+	// MaxReplicas is int32, not pointer - always has a value
+	return ks.SetReplicas(serviceName, hpa.Spec.MaxReplicas)
 }
 
