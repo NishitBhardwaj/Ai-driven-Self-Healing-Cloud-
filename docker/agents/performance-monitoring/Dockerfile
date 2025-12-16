@@ -34,6 +34,9 @@ COPY --from=builder /build/agents/performance-monitoring/agent .
 # Copy configuration files
 COPY --from=builder /build/agents/performance-monitoring/config.json ./config.json
 
+# Ensure binary is executable
+RUN chmod +x ./agent
+
 # Expose ports
 EXPOSE 8080 8085
 

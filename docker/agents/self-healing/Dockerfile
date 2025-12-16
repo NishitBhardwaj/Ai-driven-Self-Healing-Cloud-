@@ -34,6 +34,9 @@ COPY --from=builder /build/agents/self-healing/agent .
 # Copy configuration files
 COPY --from=builder /build/agents/self-healing/config.json ./config.json
 
+# Ensure binary is executable
+RUN chmod +x ./agent
+
 # Expose port
 EXPOSE 8080 8081
 
