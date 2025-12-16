@@ -100,14 +100,16 @@ func (a *TaskSolvingAgent) HandleMessage(event interface{}) error {
 	// Parse task from event
 	task, ok := event.(*Task)
 	if !ok {
-		return a.ProcessTask(&Task{
+		_, err := a.ProcessTask(&Task{
 			ID:          "unknown",
 			Description: "Unknown task",
 			Priority:    "normal",
 		})
+		return err
 	}
 
-	return a.ProcessTask(task)
+	_, err := a.ProcessTask(task)
+	return err
 }
 
 // ProcessTask processes a task using LLM to interpret intent
