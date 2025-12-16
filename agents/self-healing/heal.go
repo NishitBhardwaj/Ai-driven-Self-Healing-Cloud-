@@ -7,8 +7,8 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"time"
 
-	"github.com/ai-driven-self-healing-cloud/agents/events"
 	"github.com/sirupsen/logrus"
 )
 
@@ -61,6 +61,7 @@ func (h *Healer) Heal(request *HealingRequest) (*HealingResult, error) {
 	h.logActionToELK(action, request, result)
 
 	h.logger.WithField("action", action).Info("Healing action completed")
+	result.TimeTaken = time.Since(startTime).Milliseconds()
 	return result, nil
 }
 
