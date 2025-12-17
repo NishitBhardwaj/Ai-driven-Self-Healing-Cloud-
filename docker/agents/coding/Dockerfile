@@ -1,29 +1,45 @@
-FROM python:3.11-slim
+# Build stage
+FROM golang:1.24-alpine AS builder
+
+WORKDIR /build
+
+# Install build dependencies
+RUN apk add --no-cache git make
+
+# Copy go mod files
+COPY go.mod ./
+COPY go.sum* ./
+RUN go mod download
+
+# Copy source code
+COPY . .
+
+# Download all dependencies (including missing ones)
+RUN go mod tidy && go mod download
+
+# Build the application from cmd directory
+WORKDIR /build/cmd/agents/coding
+RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o agent .
+
+# Runtime stage
+FROM alpine:latest
+
+RUN apk --no-cache add ca-certificates tzdata
 
 WORKDIR /app
 
-# Install system dependencies
-RUN apt-get update && apt-get install -y \
-    gcc \
-    g++ \
-    && rm -rf /var/lib/apt/lists/*
+# Copy binary from builder
+COPY --from=builder /build/cmd/agents/coding/agent /app/agent
 
-# Copy requirements
-COPY agents/coding/requirements.txt .
+# Ensure binary is executable
+RUN chmod +x /app/agent
 
-# Install Python dependencies
-RUN pip install --no-cache-dir -r requirements.txt
-
-# Copy application code
-COPY agents/coding/ .
-
-# Expose ports
-EXPOSE 8080 8086
+# Expose port
+EXPOSE 8080 8081
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-  CMD python -c "import requests; requests.get('http://localhost:8080/health')" || exit 1
+  CMD wget --no-verbose --tries=1 --spider http://localhost:8080/health || exit 1
 
-# Run the application
-CMD ["python", "server.py"]
-
+# Run the application with absolute path
+ENTRYPOINT ["/app/agent"]

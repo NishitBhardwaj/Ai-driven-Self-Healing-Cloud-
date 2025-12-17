@@ -17,8 +17,8 @@ COPY . .
 # Download all dependencies (including missing ones)
 RUN go mod tidy && go mod download
 
-# Build the application
-WORKDIR /build/agents/self-healing
+# Build the application from cmd directory
+WORKDIR /build/cmd/agents/self-healing
 RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o agent .
 
 # Runtime stage
@@ -29,13 +29,13 @@ RUN apk --no-cache add ca-certificates tzdata
 WORKDIR /app
 
 # Copy binary from builder
-COPY --from=builder /build/agents/self-healing/agent .
+COPY --from=builder /build/cmd/agents/self-healing/agent /app/agent
 
 # Copy configuration files
-COPY --from=builder /build/agents/self-healing/config.json ./config.json
+COPY --from=builder /build/agents/self-healing/config.json /app/config.json
 
 # Ensure binary is executable
-RUN chmod +x ./agent
+RUN chmod +x /app/agent
 
 # Expose port
 EXPOSE 8080 8081
@@ -44,6 +44,5 @@ EXPOSE 8080 8081
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
   CMD wget --no-verbose --tries=1 --spider http://localhost:8080/health || exit 1
 
-# Run the application
-CMD ["./agent"]
-
+# Run the application with absolute path
+ENTRYPOINT ["/app/agent"]

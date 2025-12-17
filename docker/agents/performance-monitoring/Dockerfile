@@ -17,8 +17,8 @@ COPY . .
 # Download all dependencies (including missing ones)
 RUN go mod tidy && go mod download
 
-# Build the application
-WORKDIR /build/agents/performance-monitoring
+# Build the application from cmd directory
+WORKDIR /build/cmd/agents/performance-monitoring
 RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o agent .
 
 # Runtime stage
@@ -29,21 +29,17 @@ RUN apk --no-cache add ca-certificates tzdata
 WORKDIR /app
 
 # Copy binary from builder
-COPY --from=builder /build/agents/performance-monitoring/agent .
-
-# Copy configuration files
-COPY --from=builder /build/agents/performance-monitoring/config.json ./config.json
+COPY --from=builder /build/cmd/agents/performance-monitoring/agent /app/agent
 
 # Ensure binary is executable
-RUN chmod +x ./agent
+RUN chmod +x /app/agent
 
-# Expose ports
-EXPOSE 8080 8085
+# Expose port
+EXPOSE 8080 8081
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
   CMD wget --no-verbose --tries=1 --spider http://localhost:8080/health || exit 1
 
-# Run the application
-CMD ["./agent"]
-
+# Run the application with absolute path
+ENTRYPOINT ["/app/agent"]
