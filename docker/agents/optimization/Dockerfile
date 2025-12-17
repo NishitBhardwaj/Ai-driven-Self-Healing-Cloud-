@@ -1,5 +1,5 @@
 # Build stage
-FROM golang:1.24-alpine AS builder
+FROM golang:1.21-alpine AS builder
 
 WORKDIR /build
 
@@ -9,13 +9,12 @@ RUN apk add --no-cache git make
 # Copy go mod files
 COPY go.mod ./
 COPY go.sum* ./
-RUN go mod download
 
-# Copy source code
+# Copy source code first to ensure go.mod can resolve all imports
 COPY . .
 
-# Download all dependencies (including missing ones)
-RUN go mod download
+# Ensure all dependencies are downloaded and go.sum is updated
+RUN go mod tidy && go mod download
 
 # Build the application from cmd directory
 WORKDIR /build/cmd/agents/optimization

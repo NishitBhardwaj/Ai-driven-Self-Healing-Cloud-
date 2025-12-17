@@ -1,19 +1,11 @@
 package health
 
 import (
-	"time"
-
 	"github.com/ai-driven-self-healing-cloud/agents/core"
 )
 
-// SystemHealth represents the overall health of the system
-type SystemHealth struct {
-	OverallHealthy bool
-	Components     []core.HealthCheckResult
-	CheckedAt      time.Time
-}
-
 // HealthAggregator aggregates health checks from all system components
+// Note: For comprehensive system health, use SystemHealthAggregator in system_health.go
 type HealthAggregator struct {
 	registry *core.AgentRegistry
 }
@@ -26,12 +18,9 @@ func NewHealthAggregator() *HealthAggregator {
 }
 
 // CheckSystemHealth performs health checks on all registered components
-func (ha *HealthAggregator) CheckSystemHealth() SystemHealth {
-	health := SystemHealth{
-		Components: make([]core.HealthCheckResult, 0),
-		CheckedAt:  time.Now(),
-		OverallHealthy: true,
-	}
+// Returns a simplified health check result
+func (ha *HealthAggregator) CheckSystemHealth() []core.HealthCheckResult {
+	results := make([]core.HealthCheckResult, 0)
 
 	// Check all registered agents
 	agents := ha.registry.GetAllAgents()
@@ -41,19 +30,8 @@ func (ha *HealthAggregator) CheckSystemHealth() SystemHealth {
 			Component:    name,
 			HealthStatus: status,
 		}
-		health.Components = append(health.Components, result)
-
-		if !status.Healthy {
-			health.OverallHealthy = false
-		}
+		results = append(results, result)
 	}
 
-	return health
+	return results
 }
-
-// GetSystemHealth returns the current system health status
-func GetSystemHealth() SystemHealth {
-	aggregator := NewHealthAggregator()
-	return aggregator.CheckSystemHealth()
-}
-
