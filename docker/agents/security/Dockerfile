@@ -15,7 +15,7 @@ RUN go mod download
 COPY . .
 
 # Download all dependencies (including missing ones)
-RUN go mod tidy && go mod download
+RUN go mod download
 
 # Build the application from cmd directory
 WORKDIR /build/cmd/agents/security
