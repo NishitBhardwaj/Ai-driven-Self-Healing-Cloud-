@@ -251,8 +251,7 @@ jobs:
             --set global.imageTag=${{ github.sha }} \
             --set environment=${{ github.event.inputs.environment || 'staging' }} \
             --create-namespace \
-            --wait \
-            --timeout 20m \
+            --timeout 10m \
             --debug
 
       - name: Check pod status (debug)

@@ -13,7 +13,7 @@ image:
 # Self-Healing Agent
 selfHealing:
   enabled: true
-  replicaCount: 2
+  replicaCount: 1
   image:
     repository: self-healing
   service:
@@ -37,7 +37,7 @@ selfHealing:
 # Scaling Agent
 scaling:
   enabled: true
-  replicaCount: 2
+  replicaCount: 1
   image:
     repository: scaling
   service:
@@ -60,7 +60,7 @@ scaling:
 # Task-Solving Agent
 taskSolving:
   enabled: true
-  replicaCount: 2
+  replicaCount: 1
   image:
     repository: task-solving
   service:
@@ -83,7 +83,7 @@ taskSolving:
 # Performance Monitoring Agent
 performanceMonitoring:
   enabled: true
-  replicaCount: 2
+  replicaCount: 1
   image:
     repository: performance-monitoring
   service:
@@ -106,7 +106,7 @@ performanceMonitoring:
 # Coding Agent
 coding:
   enabled: true
-  replicaCount: 2
+  replicaCount: 1
   image:
     repository: coding
   service:
@@ -129,7 +129,7 @@ coding:
 # Security Agent
 security:
   enabled: true
-  replicaCount: 2
+  replicaCount: 1
   image:
     repository: security
   service:
@@ -152,7 +152,7 @@ security:
 # Optimization Agent
 optimization:
   enabled: true
-  replicaCount: 2
+  replicaCount: 1
   image:
     repository: optimization
   service:
@@ -186,7 +186,7 @@ podSecurityContext:
 securityContext:
   capabilities:
     drop:
-    - ALL
+      - ALL
   readOnlyRootFilesystem: false
   runAsNonRoot: true
   runAsUser: 1000
@@ -229,4 +229,3 @@ monitoring:
     enabled: true
     interval: 30s
     scrapeTimeout: 10s
-
