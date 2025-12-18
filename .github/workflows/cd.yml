@@ -2,23 +2,23 @@ name: CD Pipeline
 
 on:
   push:
-    branches: [ main ]
+    branches: [main]
     tags:
-      - 'v*'
+      - "v*"
   workflow_dispatch:
     inputs:
       environment:
-        description: 'Deployment environment'
+        description: "Deployment environment"
         required: true
-        default: 'staging'
+        default: "staging"
         type: choice
         options:
           - staging
           - production
       aws_region:
-        description: 'AWS Region (overrides secret)'
+        description: "AWS Region (overrides secret)"
         required: false
-        default: ''
+        default: ""
         type: choice
         options:
           - us-east-1
@@ -103,12 +103,12 @@ jobs:
       - name: Set up kubectl
         uses: azure/setup-kubectl@v4
         with:
-          version: 'v1.31.0'
+          version: "v1.31.0"
 
       - name: Set up Helm
         uses: azure/setup-helm@v4
         with:
-          version: 'v3.16.0'
+          version: "v3.16.0"
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
@@ -143,7 +143,7 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
-          go-version: '1.21'
+          go-version: "1.22"
 
       - name: Generate go.sum
         run: |
@@ -166,44 +166,46 @@ jobs:
           password: ${{ secrets.DOCKERHUB_TOKEN }}
         continue-on-error: true
 
-      # Pin Buildx version to avoid broken manifest issues
+      # Pin Buildx version to avoid broken manifest issues and Docker Hub 500 errors
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
         with:
           version: v0.12.1
+          driver-opts: |
+            image=moby/buildkit:v0.12.5
 
       - name: Build Docker images
         run: |
           echo "Building all service images..."
-          
+
           # Build self-healing
           docker build -t ai-cloud-self-healing:latest \
             -f docker/agents/self-healing/Dockerfile .
-          
+
           # Build scaling
           docker build -t ai-cloud-scaling:latest \
             -f docker/agents/scaling/Dockerfile .
-          
+
           # Build task-solving
           docker build -t ai-cloud-task-solving:latest \
             -f docker/agents/task-solving/Dockerfile .
-          
+
           # Build performance-monitoring
           docker build -t ai-cloud-performance-monitoring:latest \
             -f docker/agents/performance-monitoring/Dockerfile .
-          
+
           # Build coding
           docker build -t ai-cloud-coding:latest \
             -f docker/agents/coding/Dockerfile .
-          
+
           # Build security
           docker build -t ai-cloud-security:latest \
             -f docker/agents/security/Dockerfile .
-          
+
           # Build optimization
           docker build -t ai-cloud-optimization:latest \
             -f docker/agents/optimization/Dockerfile .
-          
+
           echo "All images built successfully!"
 
       - name: Tag images for ECR
@@ -280,7 +282,7 @@ jobs:
         continue-on-error: false
         run: |
           echo "Running smoke tests..."
-          
+
           # Test self-healing service
           kubectl run test-client-self-healing \
             --image=curlimages/curl \
@@ -289,10 +291,10 @@ jobs:
             --attach \
             -n ${{ env.KUBERNETES_NAMESPACE }} \
             --command -- curl -f http://ai-cloud-self-healing:8080/health
-          
+
           # Small delay to ensure pod cleanup
           sleep 5
-          
+
           # Test scaling service
           kubectl run test-client-scaling \
             --image=curlimages/curl \
@@ -331,12 +333,12 @@ jobs:
       - name: Set up kubectl
         uses: azure/setup-kubectl@v4
         with:
-          version: 'v1.31.0'
+          version: "v1.31.0"
 
       - name: Set up Helm
         uses: azure/setup-helm@v4
         with:
-          version: 'v3.16.0'
+          version: "v3.16.0"
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
@@ -372,7 +374,7 @@ jobs:
         with:
           status: ${{ job.status }}
           fields: repo,message,commit,author,action,eventName,ref,workflow
-          text: 'Deployment failed and was rolled back'
+          text: "Deployment failed and was rolled back"
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
         continue-on-error: true

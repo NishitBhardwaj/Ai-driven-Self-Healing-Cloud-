@@ -1,5 +1,5 @@
 # Build stage
-FROM golang:1.21-alpine AS builder
+FROM golang:1.22-alpine AS builder
 
 WORKDIR /build
 
@@ -18,10 +18,10 @@ RUN go mod tidy && go mod download
 
 # Build the application from cmd directory
 WORKDIR /build/cmd/agents/performance-monitoring
-RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o agent .
+RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -a -installsuffix cgo -o agent .
 
 # Runtime stage
-FROM alpine:latest
+FROM alpine:3.19
 
 RUN apk --no-cache add ca-certificates tzdata
 
